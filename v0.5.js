@@ -22,6 +22,7 @@ var counter = counter || 0;
 var poller = poller || null;
 var pingTimeout = pingTimeout || null;
 var connectionTimeout = connectionTimeout || null;
+var waitDuration = waitDuration || 0;
 
 var waitingForPing = waitingForPing || false;
 var waitingForInitialConnection = waitingForInitialConnection || false;
@@ -67,9 +68,16 @@ var Device = (function () {
                     EV3Connected = true;
                     connecting = false;
                     //testTheConnection(startupBatteryCheckCallback);
-                    device.startMotors('A', 50);
-                    //device.steeringControl('A', 'forward', 2, null)
-                    //device.steeringControl('A', 'reverse', 2, null)
+                    //device.startMotors('A', 50);
+                    device.steeringControl('A', 'forward', 2, null);
+                    setTimeout(function () {
+                        device.steeringControl('A', 'reverse', 2, null);
+                    }, 2000);
+                    //device.steeringControl('A', 'reverse', 2, null);
+                    
+                    //  NEEDS A SMALL TIMEOUT BETWEEN EACH CALL TO ADD COMMANDS 
+                    //  or else each new command overwrites the previous command instantaneously 
+                    //  (only last command occurs if no response needed)
                 });
                 
                 if (!connecting && !EV3Connected) {
@@ -131,6 +139,93 @@ var Device = (function () {
         });
     };
 
+    function receive_handler(data) {
+        var inputData = new Uint8Array(data);
+        console.log('received: ' + createHexString(inputData));
+        
+        if (!(EV3Connected || connecting)) {
+            console.log('received data but not connected or connecting');
+            return;
+        }
+        
+        if (!thePendingQuery) {
+            console.log("received data but didn't expect it");
+            return;
+        }
+        
+        var theResult = null;
+        
+        var port = thePendingQuery[0];
+        var type = thePendingQuery[1];
+        var mode = thePendingQuery[2];
+        var callback = thePendingQuery[3];
+        var theCommand = thePendingQuery[4];
+        
+        if (type == TOUCH_SENSOR) {
+            var result = inputData[5];
+            theResult = (result == 100);
+        }
+        else if (type == COLOR_SENSOR) {
+            var num = Math.floor(getFloatResult(inputData));
+            if (mode == AMBIENT_INTENSITY || mode == REFLECTED_INTENSITY) {
+                theResult = num;
+            }
+            else if (mode == COLOR_VALUE) {
+                if (num >= 0 && num < 7) {
+                    theResult = colors[num];
+                }
+                else {
+                    theResult = "none";
+                }
+            }
+        }
+        
+        else if (type == IR_SENSOR) {
+            if (mode == IR_PROX)
+                theResult = getFloatResult(inputData);
+            else if (mode == IR_REMOTE)
+                theResult = getIRButtonNameForCode(getFloatResult(inputData));
+        }
+        else if (type == GYRO_SENSOR) {
+            theResult = getFloatResult(inputData);
+        }
+        else if (type == READ_FROM_MOTOR) {
+            theResult = getFloatResult(inputData);
+        }
+        else if (type == UIREAD) {
+            if (mode == UIREAD_BATTERY) {
+                theResult = inputData[5];
+            }
+        }
+
+        global_sensor_result[port] = theResult;
+
+        // do the callback
+        console_log("result: " + theResult);
+        if (callback)
+            callback(theResult);
+
+        while (callback = waitingCallbacks[port].shift()) {
+            console_log("result (coalesced): " + theResult);
+            callback(theResult);
+        }
+
+        // done with this query
+        thePendingQuery = null;
+
+        // go look for the next query
+        executeQueryQueueAgain();
+    }
+    
+    function hexcouplet(num) {
+        var str = num.toString(16);
+        str = str.toUpperCase();
+        if (str.length == 1) {
+            return "0" + str;
+        }
+        return str;
+    }
+    
     var DIRECT_COMMAND_PREFIX = "800000";
     var DIRECT_COMMAND_REPLY_PREFIX = "000100";
     var DIRECT_COMMAND_REPLY_SENSOR_PREFIX = "000400";
@@ -227,7 +322,7 @@ var Device = (function () {
             return hexcouplet(bits);
         }
         else if (lc == 1) {
-            return "81" + (uarr[0]);
+            return "81" + hexcouplet(uarr[0]);
         }
         else if (lc == 2) {
             return "82" + hexcouplet(uarr[0]) + hexcouplet(uarr[1]);
@@ -275,7 +370,6 @@ var Device = (function () {
                     str.length == 2 ? str :
                         str.substring(str.length - 2, str.length);
             result += str;
-            //console.log('str '+ i + ': ' + str);
         }
         return result;
     }
@@ -390,7 +484,9 @@ var Device = (function () {
             var packedCommand = packMessageForSending(theCommand);
             sendCommand(packedCommand);
             
-            executeQueryQueueAgain();   // maybe do the next one
+            setTimeout(function () {
+                executeQueryQueueAgain();   // maybe do the next one
+            }, 5000);
         }
     }
     
@@ -558,10 +654,9 @@ var Device = (function () {
     
     //SENSOR FUNCTIONS
     
+    
+    
     //READ FUNCTIONS/METHODS
-    
-    
-    
     
     function readBatteryLevel(callback) {
         console.log('going to read battery level');
@@ -570,27 +665,79 @@ var Device = (function () {
     }
     
     function readTouchSensor(portInt, callback) {
-        
+        readFromSensor(portInt, TOUCH_SENSOR, mode0, callback);
     }
     
     function readIRRemoteSensor(portInt, callback) {
-        
+        readFromSensor2(portInt, IR_SENSOR, IR_REMOTE, callback);
     }
     
     function readFromColorSensor(portInt, modeCode, callback) {
-        
+        readFromSensor2(portInt, COLOR_SENSOR, modecode, callback);
     }
     
-    function readFromSensor() {
-        
+    Device.prototype.whenButtonPressed = function (port) {
+        if (!theEV3DevicePort || !EV3Connected) {
+            return false;
+        }
+        var portInt = parseInt(port) - 1;
+        readTouchSensor(portInt, null);
+        return global_sensor_result[portInt];
     }
     
-    function readFromSensor2() {
+    Device.prototype.whenRemoteButtonPressed = function (IRButton, port) {
+        if (!theEV3DevicePort || !EV3Connected) {
+            return false;
+        }
+        var portInt = parseInt(port) - 1;
+        readIRRemoteSensor(portInt, null);
         
+        return (global_sensor_result[portInt] == IRButton);
     }
     
-    function readFromAMotor() {
+    Device.prototype.readTouchSensorPort = function (port, callback) {
+        var portInt = parseInt(port) - 1;
+        readTouchSensor(portInt, callback);
+    }
+    
+    Device.prototype.readColorSensorPort = function (port, mode, callback) {
+        var modeCode = AMBIENT_INTENSITY;
+        if (mode == 'reflected') { modeCode = REFLECTED_INTENSITY; }
+        if (mode == 'color') { modeCode = COLOR_VALUE; }
+        if (mode == 'RGBcolor') { modeCode = COLOR_RAW_RGB; }
         
+        var portInt = parseInt(port) - 1;
+        readFromColorSensor(portInt, modecode, callback);
+    }
+    
+    function readFromSensor(port, type, mode, callback) {
+        var theCommand = createMessage([DIRECT_COMMAND_REPLY_PREFIX +
+            READ_SENSOR +
+            hexcouplet(port) +
+            type +
+            mode + '60']);
+        
+        addToQueryQueue([port, type, mode, callback, theCommand]);
+    }
+    
+    function readFromSensor2(port, type, mode, callback) {
+        var theCommand = createMessage(DIRECT_COMMAND_REPLY_SENSOR_PREFIX +
+            INPUT_DEVICE_READY_SI + "00" + // layer
+            hexcouplet(port) + "00" + // type
+            mode +
+            "0160"); // result stuff
+
+        addToQueryQueue([port, type, mode, callback, theCommand]);
+    }
+    
+    function readFromAMotor(port, type, mode, callback) {
+        var theCommand = createMessage(DIRECT_COMMAND_REPLY_SENSOR_PREFIX +
+            INPUT_DEVICE_READY_SI + "00" + // layer
+            hexcouplet(port + 12) + "00" + // type
+            mode +
+            "0160"); // result stuff
+
+        addToQueryQueue([port, type, mode, callback, theCommand]);
     }
     
     function UIRead(port, subtype, callback) {
