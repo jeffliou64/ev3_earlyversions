@@ -68,12 +68,21 @@ var Device = (function () {
                     EV3Connected = true;
                     connecting = false;
                     //testTheConnection(startupBatteryCheckCallback);
-                    //device.startMotors('A', 50);
-                    device.steeringControl('A', 'forward', 2, null);
+                    //theEV3DevicePort.set_receive_handler(receive_handler);
+                    //  NEED A AUTO CALL TO RECEIVE HANDLER (HAVING NO NOTIFY CHARACTERISTIC SUCKS)
+                    playStartUpTones();
+                    
                     setTimeout(function () {
-                        device.steeringControl('A', 'reverse', 2, null);
-                    }, 2000);
-                    //device.steeringControl('A', 'reverse', 2, null);
+                        device.steeringControl('A', 'forward', 2, null);
+                        setTimeout(function () {
+                            device.steeringControl('A', 'reverse', 2, null);
+                        }, 2000);
+                    }, 4000);
+                    
+                    // device.steeringControl('A', 'forward', 2, null);
+                    // setTimeout(function () {
+                    //     device.steeringControl('A', 'reverse', 2, null);
+                    // }, 2000);
                     
                     //  NEEDS A SMALL TIMEOUT BETWEEN EACH CALL TO ADD COMMANDS 
                     //  or else each new command overwrites the previous command instantaneously 
@@ -87,12 +96,26 @@ var Device = (function () {
         });
     };
     
+    function playStartUpTones() {
+        var tonedelay = 1000;
+        setTimeout(function () {
+            playFreqM2M(262, 100);
+        }, tonedelay);
+        
+        setTimeout(function () {
+            playFreq(392, 100, null);
+        }, tonedelay + 150);
+        
+        setTimeout(function () {
+            playTone('C5', 100, null);
+        }, tonedelay + 300);
+    }
+    
     Device.prototype.getPotentialEV3Devices = function () { //NEEDS PROMISES AND THEN CALLBACK
         return q.Promise(function (resolve, reject, notify) {
             SerialPort.list(function (err, ports) {
                 ports.forEach(function (port) {
-                    console.log(port.comName);      //defined
-                    console.log(typeof port.comName); //string
+                    console.log(port.comName);      //defined , string
                     console.log(port.manufacturer); //undefined
                     console.log(port.serialNumber); //undefined
                     console.log(port.pnpId);        //undefined
@@ -138,7 +161,7 @@ var Device = (function () {
             };
         });
     };
-
+    
     function receive_handler(data) {
         var inputData = new Uint8Array(data);
         console.log('received: ' + createHexString(inputData));
@@ -197,22 +220,22 @@ var Device = (function () {
                 theResult = inputData[5];
             }
         }
-
+        
         global_sensor_result[port] = theResult;
-
+        
         // do the callback
         console_log("result: " + theResult);
         if (callback)
             callback(theResult);
-
+            
         while (callback = waitingCallbacks[port].shift()) {
             console_log("result (coalesced): " + theResult);
             callback(theResult);
         }
-
+        
         // done with this query
         thePendingQuery = null;
-
+        
         // go look for the next query
         executeQueryQueueAgain();
     }
@@ -241,7 +264,7 @@ var Device = (function () {
     var READ_SENSOR = "9A00";
     var UIREAD = "81"; // opUI_READ
     var UIREAD_BATTERY = "12"; // GET_LBATT
-
+    
     var mode0 = "00";
     var TOUCH_SENSOR = "10";
     var COLOR_SENSOR = "1D";
@@ -253,7 +276,7 @@ var Device = (function () {
     var ULTRSONIC_SI_INCH = "04";
     var ULTRSONIC_DC_CM = "05";
     var ULTRSONIC_DC_INCH = "06";
-
+    
     var GYRO_SENSOR = "20";
     var GYRO_ANGLE = "00";
     var GYRO_RATE = "01";
@@ -292,7 +315,7 @@ var Device = (function () {
             return "09";
         else if (which == "all")
             return "0F";
-
+            
         return "00";
     }
     
@@ -313,7 +336,6 @@ var Device = (function () {
         var a = new ArrayBuffer(4);
         var sarr = new Int32Array(a);
         var uarr = new Uint8Array(a);
-        console.log('uarr: ' + uarr);
         sarr[0] = num;
         
         if (lc == 0) {
@@ -340,7 +362,7 @@ var Device = (function () {
     
     function packMessageForSending(str) {
         var length = ((str.length / 2) + 2);
-
+        
         var a = new ArrayBuffer(4);
         var c = new Uint16Array(a);
         var arr = new Uint8Array(a);
@@ -348,15 +370,15 @@ var Device = (function () {
         c[0] = length;
         counter++;
         var mess = new Uint8Array((str.length / 2) + 4);
-
+        
         for (var i = 0; i < 4; i++) {
             mess[i] = arr[i];
         }
-
+        
         for (var i = 0; i < str.length; i += 2) {
             mess[(i / 2) + 4] = parseInt(str.substr(i, 2), 16);
         }
-        console.log(mess);
+        //console.log(mess);
         return mess;
     }
     
@@ -604,11 +626,11 @@ var Device = (function () {
         var motorsOnCommand = createMessage(DIRECT_COMMAND_PREFIX
             + SET_MOTOR_SPEED + motorBitField1 + speedBits1
             + SET_MOTOR_SPEED + motorBitField2 + speedBits2
-
+            
             + SET_MOTOR_START + motorBitField);
         
         return motorsOnCommand;
-
+        
     }
     
     var driveTimer = 0;
@@ -650,7 +672,46 @@ var Device = (function () {
     
     //TONE FUNCTIONS
     
+    var frequencies = { "C4": 262, "D4": 294, "E4": 330, "F4": 349, "G4": 392, "A4": 440, "B4": 494, "C5": 523, "D5": 587, "E5": 659, "F5": 698, "G5": 784, "A5": 880, "B5": 988, "C6": 1047, "D6": 1175, "E6": 1319, "F6": 1397, "G6": 1568, "A6": 1760, "B6": 1976, "C#4": 277, "D#4": 311, "F#4": 370, "G#4": 415, "A#4": 466, "C#5": 554, "D#5": 622, "F#5": 740, "G#5": 831, "A#5": 932, "C#6": 1109, "D#6": 1245, "F#6": 1480, "G#6": 1661, "A#6": 1865 };
     
+    var colors = ['none', 'black', 'blue', 'green', 'yellow', 'red', 'white'];
+    
+    var IRbuttonNames = ['Top Left', 'Bottom Left', 'Top Right', 'Bottom Right', 'Top Bar'];
+    var IRbuttonCodes = [1, 2, 3, 4, 9];
+    
+    function playTone(tone, duration, callback) {
+        var freq = frequencies[tone];
+        console.log('playTone: ' + tone + ' duration: ' + duration + ' freq: ' + freq);
+        var volume = 100;
+        var volString = getPackedOutputHexString(volume, 1);
+        var freqString = getPackedOutputHexString(freq, 2);
+        var durString = getPackedOutputHexString(duration, 2);
+        
+        var toneCommand = createMessage(DIRECT_COMMAND_PREFIX + PLAYTONE + volString + freqString + durString);
+        addToQueryQueue([TONE_QUERY, duration, callback, toneCommand]);
+    }
+    
+    function playFreq(freq, duration, callback) {
+        console.log('playFreq duration: ' + duration + ' freq: ' + freq);
+        var volume = 100;
+        var volString = getPackedOutputHexString(volume, 1);
+        var freqString = getPackedOutputHexString(freq, 2);
+        var durString = getPackedOutputHexString(duration, 2);
+        
+        var toneCommand = createMessage(DIRECT_COMMAND_PREFIX + PLAYTONE + volString + freqString + durString);
+        addToQueryQueue([TONE_QUERY, duration, callback, toneCommand]);
+    }
+    
+    function playFreqM2M(freq, duration) {
+        console.log('playFreqM2M duration: ' + duration + ' freq: ' + freq);
+        var volume = 100;
+        var volString = getPackedOutputHexString(volume, 1);
+        var freqString = getPackedOutputHexString(freq, 2);
+        var durString = getPackedOutputHexString(duration, 2);
+        
+        var toneCommand = createMessage(DIRECT_COMMAND_PREFIX + PLAYTONE + volString + freqString + durString);
+        addToQueryQueue([TONE_QUERY, 0, null, toneCommand]);
+    }
     
     //SENSOR FUNCTIONS
     
@@ -726,7 +787,7 @@ var Device = (function () {
             hexcouplet(port) + "00" + // type
             mode +
             "0160"); // result stuff
-
+            
         addToQueryQueue([port, type, mode, callback, theCommand]);
     }
     
@@ -736,7 +797,7 @@ var Device = (function () {
             hexcouplet(port + 12) + "00" + // type
             mode +
             "0160"); // result stuff
-
+            
         addToQueryQueue([port, type, mode, callback, theCommand]);
     }
     
