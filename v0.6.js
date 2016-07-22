@@ -74,11 +74,12 @@ var Device = (function () {
                     waitingForInitialConnection = true;
                     
                     // setTimeout(function () {
-                    //     device.steeringControl('A', 'forward', 2, null);
-                    //     setTimeout(function () {
-                    //         device.steeringControl('A', 'reverse', 2, null);
-                    //     }, 2000);
-                    // }, 4000);
+                    //     // device.steeringControl('A', 'forward', 2, null);
+                    //     // setTimeout(function () {
+                    //     //     device.steeringControl('A', 'reverse', 2, null);
+                    //     // }, 2000);
+                    //     device.readTouchSensorPort(1, null);
+                    // }, 10000);
 
                     // device.steeringControl('A', 'forward', 2, null);
                     // setTimeout(function () {
@@ -127,7 +128,7 @@ var Device = (function () {
         if (poller)
             clearInterval(poller);
 
-        poller = setInterval(pingBatteryWatchdog, 10000);
+        poller = setInterval(pingBatteryWatchdog, 5000);
     }
 
     function pingBatteryWatchdog() {
@@ -136,6 +137,11 @@ var Device = (function () {
         waitingForPing = true;
         pingTimeout = setTimeout(pingTimeOutCallback, 3000);
     }
+    
+    // function sensorWatchdog(sensor) {
+    //     console.log('checking sensor: ' + sensor);
+        
+    // }
     
     Device.prototype.disconnect = function () {
         port.close(function (error) {
@@ -523,7 +529,6 @@ var Device = (function () {
             }
             waitingQueries.shift(); //remove it from the queue
             thePendingQuery = query_info;
-            console.log('we made it this far');
             console.log('command before packing: ' + theCommand);
             //actually go ahead and make the query
             var packedCommand = packMessageForSending(theCommand);
@@ -595,7 +600,7 @@ var Device = (function () {
                 }
             }
         }
-        console.log("query_info: " + query_info);
+        //console.log("query_info: " + query_info);
         waitingQueries.push(query_info);
         console.log('waitingQueries length: ' + waitingQueries.length);
         executeQueryQueue();
