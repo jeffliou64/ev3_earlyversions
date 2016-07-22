@@ -73,13 +73,13 @@ var Device = (function () {
                     testTheConnection(startupBatteryCheckCallback);
                     waitingForInitialConnection = true;
                     
-                    // setTimeout(function () {
-                    //     // device.steeringControl('A', 'forward', 2, null);
-                    //     // setTimeout(function () {
-                    //     //     device.steeringControl('A', 'reverse', 2, null);
-                    //     // }, 2000);
-                    //     device.readTouchSensorPort(1, null);
-                    // }, 10000);
+                    setTimeout(function () {
+                        // device.steeringControl('A', 'forward', 2, null);
+                        // setTimeout(function () {
+                        //     device.steeringControl('A', 'reverse', 2, null);
+                        // }, 2000);
+                        device.readColorSensorPort(1, 'reflected', null);
+                    }, 2000);
 
                     // device.steeringControl('A', 'forward', 2, null);
                     // setTimeout(function () {
@@ -128,7 +128,7 @@ var Device = (function () {
         if (poller)
             clearInterval(poller);
 
-        poller = setInterval(pingBatteryWatchdog, 5000);
+        poller = setInterval(pingBatteryWatchdog, 10000);
     }
 
     function pingBatteryWatchdog() {
@@ -314,6 +314,17 @@ var Device = (function () {
             return "0" + str;
         }
         return str;
+    }
+    
+    function getFloatResult(inputData) {
+        var a = new ArrayBuffer(4);
+        var c = new Float32Array(a);
+        var arr = new Uint8Array(a);
+        arr[0] = inputData[5];
+        arr[1] = inputData[6];
+        arr[2] = inputData[7]
+        arr[3] = inputData[8]
+        return c[0];
     }
     
     var DIRECT_COMMAND_PREFIX = "800000";
@@ -801,7 +812,7 @@ var Device = (function () {
     }
     
     function readFromColorSensor(portInt, modeCode, callback) {
-        readFromSensor2(portInt, COLOR_SENSOR, modecode, callback);
+        readFromSensor2(portInt, COLOR_SENSOR, modeCode, callback);
     }
     
     Device.prototype.whenButtonPressed = function (port) {
@@ -835,7 +846,7 @@ var Device = (function () {
         if (mode == 'RGBcolor') { modeCode = COLOR_RAW_RGB; }
         
         var portInt = parseInt(port) - 1;
-        readFromColorSensor(portInt, modecode, callback);
+        readFromColorSensor(portInt, modeCode, callback);
     }
     
     function readFromSensor(port, type, mode, callback) {
