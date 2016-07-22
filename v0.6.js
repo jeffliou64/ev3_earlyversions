@@ -24,6 +24,14 @@ var pingTimeout = pingTimeout || null;
 var connectionTimeout = connectionTimeout || null;
 var waitDuration = waitDuration || 0;
 
+var sensorType = sensorType || null;
+var touchPoller = touchPoller || null;
+var colorPoller = colorPoller || null;
+var IRPoller = IRPoller || null;
+var GYROPoller = GYROPoller || null;
+var MOTORPoller = MOTORPoller || null;
+var UIPoller = UIPoller || null;
+
 var waitingForPing = waitingForPing || false;
 var waitingForInitialConnection = waitingForInitialConnection || false;
 
@@ -78,13 +86,15 @@ var Device = (function () {
                         // setTimeout(function () {
                         //     device.steeringControl('A', 'reverse', 2, null);
                         // }, 2000);
-                        device.readColorSensorPort(1, 'reflected', null);
+                        
+                        //device.readDistanceSensorPort(1, null);
+                        
+                        //device.readTouchSensorPort(1, null);
+                        //device.readColorSensorPort(1, 'reflected', null);
+                        device.readColorSensorPort(1, 'color', null);
+                        //device.readColorSensorPort(1, 'RGBcolor', null);
                     }, 2000);
 
-                    // device.steeringControl('A', 'forward', 2, null);
-                    // setTimeout(function () {
-                    //     device.steeringControl('A', 'reverse', 2, null);
-                    // }, 2000);
 
                     //  NEEDS A SMALL TIMEOUT BETWEEN EACH CALL TO ADD COMMANDS 
                     //  or else each new command overwrites the previous command instantaneously 
@@ -138,10 +148,69 @@ var Device = (function () {
         pingTimeout = setTimeout(pingTimeOutCallback, 3000);
     }
     
-    // function sensorWatchdog(sensor) {
-    //     console.log('checking sensor: ' + sensor);
+    function setupSensorWatchdog(port, mode, callback) {
+        console.log('checking sensor: ' + sensor);
+        if (touchPoller) {
+            clearInterval(touchPoller);
+        }
+        if (colorPoller) {
+            clearInterval(colorPoller);
+        }
+        if (IRPoller) {
+            clearInterval(IRPoller);
+        }
+        if (GYROPoller) {
+            clearInterval(GYROPoller);
+        }
+        if (MOTORPoller) {
+            clearInterval(MOTORPoller);
+        }
+        if (UIPoller) {
+            clearInterval(UIPoller);
+        }
         
-    // }
+        
+        if (sensorType == TOUCH_SENSOR) {
+            touchPoller = setInterval(pingsensorWatchdog(port, mode, callback), 2000);
+        }
+        else if (sensorType == COLOR_SENSOR) {
+            colorPoller = setInterval(pingsensorWatchdog(port, mode, callback), 2000);
+        }
+        else if (sensorType == IR_SENSOR) {
+            IRPoller = setInterval(pingsensorWatchdog(port, mode, callback), 2000);
+        }
+        else if (sensorType == GYRO_SENSOR) {
+            GYROPoller = setInterval(pingsensorWatchdog(port, mode, callback), 2000);
+        }
+        else if (sensorType == READ_FROM_MOTOR) {
+            MOTORPoller = setInterval(pingsensorWatchdog(port, mode, callback), 2000);
+        }
+        // else if (sensorType == UIREAD) {
+        //     UIPoller = setInterval(pingsensorWatchdog, 2000);
+        // }
+        
+    }
+    
+    function SensorWatchdog(port, mode, callback) {
+        if (sensorType == TOUCH_SENSOR) {
+            readTouchSensorPort(port, callback);
+        }
+        else if (sensorType == COLOR_SENSOR) {
+            device.readColorSensorPort(port, mode, callback);
+        }
+        else if (sensorType == IR_SENSOR) {
+            readDistanceSensorPort(port, callback);
+        }
+        else if (sensorType == GYRO_SENSOR) {
+            console.log('need to be implemented...? (gyro)');
+        }
+        else if (sensorType == READ_FROM_MOTOR) {
+            device.readFromMotor(mode, port, callback);
+        }
+        // else if (sensorType == UIREAD) {
+        //     console.log('need to be implemented...? (battery)');
+        // }
+    }
     
     Device.prototype.disconnect = function () {
         port.close(function (error) {
@@ -183,23 +252,6 @@ var Device = (function () {
         }
     }
     
-    // function connectionTimeOutCallback() {
-    //     if (waitingForInitialConnection == true) {
-    //         console.log('Initial Conection timed out');
-    //         connecting = false;
-            
-    //         if (potentialEV3Devices.length == 0) {
-    //             console.log('Tried all devices with no luck.');
-                
-                
-    //             theEV3DevicePort = null;
-    //         }
-    //         else {
-    //             tryNextDevice();
-    //         }
-    //     }
-    // }
-    
     function pingBatteryCheckCallback(result) {
         console.log('pinged battery level: ' + result);
         if (pingTimeout) {
@@ -217,15 +269,15 @@ var Device = (function () {
     function playStartUpTones() {
         var tonedelay = 1000;
         setTimeout(function () {
-            playFreqM2M(262, 100);
+            playFreqM2M(262, 20);
         }, tonedelay);
         
         setTimeout(function () {
-            playFreq(392, 100, null);
+            playFreq(392, 20, null);
         }, tonedelay + 150);
         
         setTimeout(function () {
-            playTone('C5', 100, null);
+            playTone('C5', 20, null);
         }, tonedelay + 300);
     }
     
@@ -257,6 +309,8 @@ var Device = (function () {
         }
         else if (type == COLOR_SENSOR) {
             var num = Math.floor(getFloatResult(inputData));
+            console.log(num);
+            console.log(getFloatResult(inputData));
             if (mode == AMBIENT_INTENSITY || mode == REFLECTED_INTENSITY) {
                 theResult = num;
             }
@@ -265,14 +319,19 @@ var Device = (function () {
                     theResult = colors[num];
                 }
                 else {
-                    theResult = "none";
+                    theResult = num;
+                    //theResult = "none";
                 }
             }
         }
         
         else if (type == IR_SENSOR) {
-            if (mode == IR_PROX)
+            if (mode == IR_PROX) {
+                console.log('ollo');
+                console.log('input data: ' + inputData);
                 theResult = getFloatResult(inputData);
+                console.log('float data: ' + theResult);
+            }
             else if (mode == IR_REMOTE)
                 theResult = getIRButtonNameForCode(getFloatResult(inputData));
         }
@@ -319,6 +378,7 @@ var Device = (function () {
     function getFloatResult(inputData) {
         var a = new ArrayBuffer(4);
         var c = new Float32Array(a);
+        console.log(c);
         var arr = new Uint8Array(a);
         arr[0] = inputData[5];
         arr[1] = inputData[6];
@@ -521,7 +581,7 @@ var Device = (function () {
             var mode = query_info[2];
             var callback = query_info[3];
             var theCommand = query_info[4];
-            console.log('The command is: ' + theCommand);
+            //console.log('The command is: ' + theCommand);
             if (thePendingQuery) {
                 console.log('1');
                 //we are waiting for a result
@@ -600,7 +660,8 @@ var Device = (function () {
                 var callback = next_query[3];
                 var command = next_query[4];
                 var this_port = query_info[0];
-                
+                console.log('SETUP SENSOR WATCHDOG');
+                setupSensorWatchdog(port, mode, callback)
                 if (port == this_port) {
                     var this_callback = query_info[3];
                     if (this_callback) {
@@ -790,11 +851,7 @@ var Device = (function () {
         var toneCommand = createMessage(DIRECT_COMMAND_PREFIX + PLAYTONE + volString + freqString + durString);
         addToQueryQueue([TONE_QUERY, 0, null, toneCommand]);
     }
-    
-    //SENSOR FUNCTIONS
-    
-    
-    
+
     //READ FUNCTIONS/METHODS
     
     function readBatteryLevel(callback) {
@@ -815,6 +872,27 @@ var Device = (function () {
         readFromSensor2(portInt, COLOR_SENSOR, modeCode, callback);
     }
     
+    Device.prototype.readDistanceSensorPort = function (port, callback) {
+        var portInt = parseInt(port) - 1;
+        
+        readFromSensor2(portInt, IR_SENSOR, IR_PROX, callback);
+    }
+    
+    Device.prototype.readRemoteButtonPort = function (port, callback) {
+        var portInt = parseInt(port) - 1;
+        
+        readIRRemoteSensor(portInt, callback);
+    }
+    
+    Device.prototype.readFromMotor = function (mmode, which, callback) {
+        var portInt = getMotorIndex(which);
+        var mode = "01";
+        if (mmode == 'speed') {
+            mode = "02";
+        }
+        readFromAMotor(portInt, READ_FROM_MOTOR, mode, callback);
+    }
+    
     Device.prototype.whenButtonPressed = function (port) {
         if (!theEV3DevicePort || !EV3Connected) {
             return false;
@@ -830,6 +908,7 @@ var Device = (function () {
         }
         var portInt = parseInt(port) - 1;
         readIRRemoteSensor(portInt, null);
+        
         
         return (global_sensor_result[portInt] == IRButton);
     }
@@ -855,6 +934,7 @@ var Device = (function () {
             hexcouplet(port) +
             type +
             mode + '60']);
+        sensorType = type;
         
         addToQueryQueue([port, type, mode, callback, theCommand]);
     }
@@ -865,6 +945,9 @@ var Device = (function () {
             hexcouplet(port) + "00" + // type
             mode +
             "0160"); // result stuff
+        
+        sensorType = type;
+        
             
         addToQueryQueue([port, type, mode, callback, theCommand]);
     }
@@ -875,6 +958,8 @@ var Device = (function () {
             hexcouplet(port + 12) + "00" + // type
             mode +
             "0160"); // result stuff
+        
+        sensorType = type;
             
         addToQueryQueue([port, type, mode, callback, theCommand]);
     }
@@ -884,11 +969,12 @@ var Device = (function () {
             UIREAD + subtype +
             "60");
         
+        sensorType = subtype;
+        
         addToQueryQueue([port, UIREAD, subtype, callback, theCommand]);
     }
     
-    
-    
+
     
     
     return Device;
