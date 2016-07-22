@@ -63,27 +63,28 @@ var Device = (function () {
                     if (err) {
                         return console.log('Error: ', err.message);
                     }
+                    theEV3DevicePort.on('data', function (result) {
+                        receive_handler(result);
+                    })
                     console.log('CONNECTED TO ' + theEV3DevicePort);
                     console.log('CONNECTED TO ' + serialport.comName);
                     EV3Connected = true;
                     connecting = false;
-                    //testTheConnection(startupBatteryCheckCallback);
-                    //theEV3DevicePort.set_receive_handler(receive_handler);
-                    //  NEED A AUTO CALL TO RECEIVE HANDLER (HAVING NO NOTIFY CHARACTERISTIC SUCKS)
-                    playStartUpTones();
+                    testTheConnection(startupBatteryCheckCallback);
+                    waitingForInitialConnection = true;
                     
-                    setTimeout(function () {
-                        device.steeringControl('A', 'forward', 2, null);
-                        setTimeout(function () {
-                            device.steeringControl('A', 'reverse', 2, null);
-                        }, 2000);
-                    }, 4000);
-                    
+                    // setTimeout(function () {
+                    //     device.steeringControl('A', 'forward', 2, null);
+                    //     setTimeout(function () {
+                    //         device.steeringControl('A', 'reverse', 2, null);
+                    //     }, 2000);
+                    // }, 4000);
+
                     // device.steeringControl('A', 'forward', 2, null);
                     // setTimeout(function () {
                     //     device.steeringControl('A', 'reverse', 2, null);
                     // }, 2000);
-                    
+
                     //  NEEDS A SMALL TIMEOUT BETWEEN EACH CALL TO ADD COMMANDS 
                     //  or else each new command overwrites the previous command instantaneously 
                     //  (only last command occurs if no response needed)
@@ -95,21 +96,6 @@ var Device = (function () {
             });
         });
     };
-    
-    function playStartUpTones() {
-        var tonedelay = 1000;
-        setTimeout(function () {
-            playFreqM2M(262, 100);
-        }, tonedelay);
-        
-        setTimeout(function () {
-            playFreq(392, 100, null);
-        }, tonedelay + 150);
-        
-        setTimeout(function () {
-            playTone('C5', 100, null);
-        }, tonedelay + 300);
-    }
     
     Device.prototype.getPotentialEV3Devices = function () { //NEEDS PROMISES AND THEN CALLBACK
         return q.Promise(function (resolve, reject, notify) {
@@ -133,25 +119,22 @@ var Device = (function () {
         });
     };
     
-    function startupBatteryCheckCallback(result) {
-        console.log('got battery level at connect: ' + result);
-        waitingForInitialConnection = false;
-        EV3Connected = true;
-        connecting = false;
-        
-        if (result < 11 && !warnedAboutBattery) {
-            alert('Your Battery is getting low. ');
-            warnedAboutBattery = true;
-        }
-        
-        if (lastCommandWeWereTrying) {
-            waitingQueries.push(lastCommandWeWereTrying);
-            executeQueryQueue();
-        }
-    }
-    
     function testTheConnection(theCallback) {
         readBatteryLevel(theCallback);
+    }
+    
+    function setupWatchdog() {
+        if (poller)
+            clearInterval(poller);
+
+        poller = setInterval(pingBatteryWatchdog, 10000);
+    }
+
+    function pingBatteryWatchdog() {
+        console.log("pingBatteryWatchdog");
+        testTheConnection(pingBatteryCheckCallback);
+        waitingForPing = true;
+        pingTimeout = setTimeout(pingTimeOutCallback, 3000);
     }
     
     Device.prototype.disconnect = function () {
@@ -161,6 +144,84 @@ var Device = (function () {
             };
         });
     };
+    
+    function pingTimeOutCallback() {
+        if (waitingForPing == true) {
+            console.log('ping timed out');
+            if (poller) {
+                clearInterval(poller);
+            }
+            
+            EV3Connected = false;
+        }
+    }
+    
+    function startupBatteryCheckCallback(result) {
+        console.log('got battery level at connect: ' + result);
+        waitingForInitialConnection = false;
+        EV3Connected = true;
+        connecting = false;
+        
+        playStartUpTones();
+        
+        if (result < 11 && !warnedAboutBattery) {
+            alert('Your Battery is getting low. ');
+            warnedAboutBattery = true;
+        }
+        
+        setupWatchdog();
+        
+        if (lastCommandWeWereTrying) {
+            waitingQueries.push(lastCommandWeWereTrying);
+            executeQueryQueue();
+        }
+    }
+    
+    // function connectionTimeOutCallback() {
+    //     if (waitingForInitialConnection == true) {
+    //         console.log('Initial Conection timed out');
+    //         connecting = false;
+            
+    //         if (potentialEV3Devices.length == 0) {
+    //             console.log('Tried all devices with no luck.');
+                
+                
+    //             theEV3DevicePort = null;
+    //         }
+    //         else {
+    //             tryNextDevice();
+    //         }
+    //     }
+    // }
+    
+    function pingBatteryCheckCallback(result) {
+        console.log('pinged battery level: ' + result);
+        if (pingTimeout) {
+            clearTimeout(pingTimeout);
+        }
+        waitingForPing = false;
+        
+        if (result < 11 && !warnedAboutBattery) {
+            alert('Your battery is getting low.');
+            warnedAboutBattery = true;
+        }
+    }
+    
+    
+    function playStartUpTones() {
+        var tonedelay = 1000;
+        setTimeout(function () {
+            playFreqM2M(262, 100);
+        }, tonedelay);
+        
+        setTimeout(function () {
+            playFreq(392, 100, null);
+        }, tonedelay + 150);
+        
+        setTimeout(function () {
+            playTone('C5', 100, null);
+        }, tonedelay + 300);
+    }
     
     function receive_handler(data) {
         var inputData = new Uint8Array(data);
@@ -224,12 +285,12 @@ var Device = (function () {
         global_sensor_result[port] = theResult;
         
         // do the callback
-        console_log("result: " + theResult);
+        console.log("result: " + theResult);
         if (callback)
             callback(theResult);
             
         while (callback = waitingCallbacks[port].shift()) {
-            console_log("result (coalesced): " + theResult);
+            console.log("result (coalesced): " + theResult);
             callback(theResult);
         }
         
@@ -408,7 +469,7 @@ var Device = (function () {
             });
         }
         else {
-            console_log("sendCommand called when not connected");
+            console.log("sendCommand called when not connected");
         }
     }
     
@@ -578,19 +639,20 @@ var Device = (function () {
         clearDriveTimer();
         var defaultSpeed = 50;
         var motorCommand = null;
-        if (what == 'forward') {
-            motorCommand = motor(ports, defaultSpeed);
+        switch (what) {
+            case 'forward':
+                motorCommand = motor(ports, defaultSpeed)
+                break;
+            case 'reverse':
+                motorCommand = motor(ports, defaultSpeed * -1)
+                break;
+            case 'right':
+                motorCommand = motor2(ports, defaultSpeed);
+                break;
+            case 'left':
+                motorCommand = motor2(ports, defaultSpeed * -1)
+                break;
         }
-        else if (what == 'reverse') {
-            motorCommand = motor(ports, defaultSpeed * -1);
-        }
-        else if (what == 'right') {
-            motorCommand = motor2(ports, defaultSpeed);
-        }
-        else if (what == 'left') {
-            motorCommand = motor2(ports, defaultSpeed * -1);
-        }
-        
         addToQueryQueue([DRIVE_QUERY_DURATION, duration, callback, motorCommand]);
     }
     

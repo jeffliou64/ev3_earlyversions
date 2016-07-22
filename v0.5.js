@@ -68,8 +68,6 @@ var Device = (function () {
                     EV3Connected = true;
                     connecting = false;
                     //testTheConnection(startupBatteryCheckCallback);
-                    //theEV3DevicePort.set_receive_handler(receive_handler);
-                    //  NEED A AUTO CALL TO RECEIVE HANDLER (HAVING NO NOTIFY CHARACTERISTIC SUCKS)
                     playStartUpTones();
                     
                     setTimeout(function () {
@@ -78,11 +76,6 @@ var Device = (function () {
                             device.steeringControl('A', 'reverse', 2, null);
                         }, 2000);
                     }, 4000);
-                    
-                    // device.steeringControl('A', 'forward', 2, null);
-                    // setTimeout(function () {
-                    //     device.steeringControl('A', 'reverse', 2, null);
-                    // }, 2000);
                     
                     //  NEEDS A SMALL TIMEOUT BETWEEN EACH CALL TO ADD COMMANDS 
                     //  or else each new command overwrites the previous command instantaneously 
@@ -570,30 +563,31 @@ var Device = (function () {
         var motorsCommand = createMessage(DIRECT_COMMAND_PREFIX + SET_MOTOR_STEP_SPEED + motorBitField + speedBits
             + stepRampUpBits + stepConstantBits + stepRampDownBits + howHex
             + SET_MOTOR_START + motorBitField);
-        
+
         addToQueryQueue([DRIVE_QUERY, 0, null, motorsCommand]);
     }
-    
+
     Device.prototype.steeringControl = function (ports, what, duration, callback) {
         clearDriveTimer();
         var defaultSpeed = 50;
         var motorCommand = null;
-        if (what == 'forward') {
-            motorCommand = motor(ports, defaultSpeed);
+        switch (what) {
+            case 'forward':
+                motorCommand = motor(ports, defaultSpeed)
+                break;
+            case 'reverse':
+                motorCommand = motor(ports, defaultSpeed * -1)
+                break;
+            case 'right':
+                motorCommand = motor2(ports, defaultSpeed);
+                break;
+            case 'left':
+                motorCommand = motor2(ports, defaultSpeed * -1)
+                break;
         }
-        else if (what == 'reverse') {
-            motorCommand = motor(ports, defaultSpeed * -1);
-        }
-        else if (what == 'right') {
-            motorCommand = motor2(ports, defaultSpeed);
-        }
-        else if (what == 'left') {
-            motorCommand = motor2(ports, defaultSpeed * -1);
-        }
-        
         addToQueryQueue([DRIVE_QUERY_DURATION, duration, callback, motorCommand]);
     }
-    
+
     function capSpeed (speed) {
         if (speed > 100) { speed = 100; }
         if (speed < -100) { speed = -100; }
@@ -626,7 +620,6 @@ var Device = (function () {
         var motorsOnCommand = createMessage(DIRECT_COMMAND_PREFIX
             + SET_MOTOR_SPEED + motorBitField1 + speedBits1
             + SET_MOTOR_SPEED + motorBitField2 + speedBits2
-            
             + SET_MOTOR_START + motorBitField);
         
         return motorsOnCommand;
