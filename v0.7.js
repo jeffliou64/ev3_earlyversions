@@ -74,10 +74,23 @@ var Device = (function () {
                     testTheConnection(startupBatteryCheckCallback);
                     waitingForInitialConnection = true;
                     
+                    // setTimeout(function () {
+                    //     device.readColorSensorPort(1, 'color', null);
+                    // }, 1000);
+                    
                     setTimeout(function () {
+                        // device.steeringControl('A', 'forward', 2, null);
+                        // setTimeout(function () {
+                        //     device.steeringControl('A', 'reverse', 2, null);
+                        // }, 2000);
+                        
                         device.readDistanceSensorPort(1, null);
-                        //device.readColorSensorPort(1, 'reflected', null);
-                        //device.readColorSensorPort(1, 'color', null);
+                        
+                        //device.readTouchSensorPort(1, null);
+                        // device.readColorSensorPort(1, 'reflected', null);
+                        // device.readColorSensorPort(1, 'color', null);
+                        //device.steeringControl('A', 'forward', 2, null);
+                        //device.steeringControl('A', 'reverse', 2, null);
                         //device.readColorSensorPort(1, 'RGBcolor', null);
                     }, 5000);
                     
@@ -148,6 +161,25 @@ var Device = (function () {
             if (poller) {
                 clearInterval(poller);
             }
+            // if (touchPoller) {
+            //     clearInterval(touchPoller);
+            // }
+            // if (colorPoller) {
+            //     clearInterval(colorPoller);
+            // }
+            // if (IRPoller) {
+            //     clearInterval(IRPoller);
+            // }
+            // if (GYROPoller) {
+            //     clearInterval(GYROPoller);
+            // }
+            // if (MOTORPoller) {
+            //     clearInterval(MOTORPoller);
+            // }
+            // if (UIPoller) {
+            //     clearInterval(UIPoller);
+            // }
+            
             EV3Connected = false;
         }
     }
@@ -437,6 +469,7 @@ var Device = (function () {
         for (var i = 0; i < str.length; i += 2) {
             mess[(i / 2) + 4] = parseInt(str.substr(i, 2), 16);
         }
+        //console.log(mess);
         return mess;
     }
     
@@ -457,6 +490,8 @@ var Device = (function () {
     function sendCommand(commandArray) {
         console.log('Command Array: ' +commandArray);
         if ((EV3Connected || connecting) && theEV3DevicePort) {
+            //console.log("sending: " + createHexString(commandArray));
+            //console.log(commandArray);
             theEV3DevicePort.write(commandArray, function (error) {
                 if (error) {
                     console.log('error: ' + error);
