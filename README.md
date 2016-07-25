@@ -14,9 +14,11 @@ v0.5.js: Timed motor functions working (with timing hiccup: can't add to queue p
 v0.6.js: Reading from Color sensor (color, reflected intensity) implemented and functional. readDistanceSensorPort functional.
          Next step: check readfrommotor and readfromtouchsensor
 
-v0.7.js: (readfrommotor & readfromtouchsensor (not sure if this will work without watchdog))
+v0.7.js: Read from Motors and read from touch sensor functional. One existing issue is that motors will run simutaneously (and durations add up),
+         and that the queue currently adds up a lot of performance time (listing a bunch of commands will stop motors from stopping until all commands complete)
+         Also, there seems to be a slight difference between the motor value given and the motor value read.
 
-v0.8.js: (readremotebuttonport (and IR responses))
+v0.8.js: (readremotebuttonport (and IR responses)), fix MOTOR bugs. increase performance efficiency
 
 
 

@@ -83,6 +83,10 @@ var Device = (function () {
                         //device.readTouchSensorPort(1, null);
                         
                         // device.readFromMotor('speed', 'A', null);
+                        // device.readFromMotor('speed', 'A', null);
+                        // device.readFromMotor('speed', 'A', null);
+                        // device.readFromMotor('speed', 'A', null);
+                        // device.readFromMotor('speed', 'A', null);
                         
                         //device.readColorSensorPort(1, 'reflected', null);
                         //device.readColorSensorPort(2, 'color', null);
