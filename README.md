@@ -18,11 +18,17 @@ v0.7.js: Read from Motors and read from touch sensor functional. One existing is
          and that the queue currently adds up a lot of performance time (listing a bunch of commands will stop motors from stopping until all commands complete)
          Also, there seems to be a slight difference between the motor value given and the motor value read.
 
-v0.8.js: (readremotebuttonport (and IR responses)), fix MOTOR bugs. increase performance efficiency
+v0.8.js: (readremotebuttonport (and IR responses)), fix MOTOR bugs & make them more independent.
+         1) fixed motor differences (each motor can now run and stop independently);
+         2) write motor degrees somewhat working (the angle that is spun is often slightly off from what was sent)
+                note: higher speed makes it even more unreliable (maybe have Tickle set a low speed (10%)
+         2) make sure all IR responses work properly
+         3) < get remote button port reading complete >
+         4) < test all motors, test all reading types (color, touch, IR, motor, UI) , test remote buttons, test brick buttons >
 
 
 
 
 
 
-v1.0.js: everything functional at baselevel. next step: test multiple commands at once (queryqueue), simplify code, mesh blocks together
+v1.0.js: everything functional at baselevel. next step(s): simplify code, mesh blocks together, increase performance efficiency

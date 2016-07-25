@@ -74,19 +74,19 @@ var Device = (function () {
                     waitingForInitialConnection = true;
                     
                     setTimeout(function () {
-                        device.steeringControl('A', 'forward', 100, 2, null);
-                        //setTimeout(function () {
-                            device.steeringControl('B', 'reverse', 100, 2, null);
-                        //}, 2000);
+                        // device.steeringControl('A', 'forward', 100, 8, null);
+                        // setTimeout(function () {
+                        //     device.steeringControl('B', 'reverse', 100, 2, null);
+                        // }, 3000);
+                        
+                        device.motorDegrees('A', 100, 90, 1);
                         
                         //device.readDistanceSensorPort(3, null);
                         //device.readTouchSensorPort(1, null);
                         
-                        // device.readFromMotor('speed', 'A', null);
-                        // device.readFromMotor('speed', 'A', null);
-                        // device.readFromMotor('speed', 'A', null);
-                        // device.readFromMotor('speed', 'A', null);
-                        // device.readFromMotor('speed', 'A', null);
+                        //device.readFromMotor('speed', 'A', null);
+                        //device.readFromMotor('speed', 'A', null);
+                        //device.readFromMotor('speed', 'A', null);
                         
                         //device.readColorSensorPort(1, 'reflected', null);
                         //device.readColorSensorPort(2, 'color', null);
@@ -487,7 +487,7 @@ var Device = (function () {
         } , 1000);
     }    
     
-    function executeQueryQueue() {
+    function executeQueryQueue(ports) {
         if (waitingQueries.length == 0) {
             return;
         }
@@ -520,13 +520,13 @@ var Device = (function () {
                 if (thePendingQuery[0] == port) {
                     // special case: we are actually already in the process of querying this same sensor (should we also compare the type and mode, or maybe just match the command string?)
                     // so we don't want to bother calling it again
-                    // if (thePendingQuery[4] == theCommand) {
-                    //     waitingQueries.shift();
-                    //     if (callback) {
-                    //         console.log('2');
-                    //         waitingCallbacks[port].push(callback);
-                    //     }
-                    // }
+                    if (thePendingQuery[4] == theCommand) {
+                        console.log('2');
+                        waitingQueries.shift();
+                        if (callback) {
+                            waitingCallbacks[port].push(callback);
+                        }
+                    }
                     return;
                 }
                 //do nothing. we'll try again after the query finishes
@@ -559,7 +559,7 @@ var Device = (function () {
                     driveTimer = setTimeout(function () {
                         if (duration > 0) // allow zero duration to run motors asynchronously
                         {
-                            motorsStop('break'); // xxx
+                            motorsStop('break', ports); // xxx
                         }
                         if (callback)
                             callback();
@@ -587,7 +587,7 @@ var Device = (function () {
         }
     }
     
-    function addToQueryQueue(query_info) {
+    function addToQueryQueue(query_info, ports) {
         for (var i = 0; i < waitingQueries.length; i++) {
             console.log('checking waitingQueries.length');
             var next_query = waitingQueries[i];
@@ -613,7 +613,7 @@ var Device = (function () {
         
         waitingQueries.push(query_info);
         console.log('waitingQueries length: ' + waitingQueries.length);
-        executeQueryQueue();
+        executeQueryQueue(ports);
     }
     
     //MOTOR FUNCTIONS
@@ -668,7 +668,7 @@ var Device = (function () {
                 motorCommand = motor2(ports, speed * -1)
                 break;
         }
-        addToQueryQueue([DRIVE_QUERY_DURATION, duration, callback, motorCommand]);
+        addToQueryQueue([DRIVE_QUERY_DURATION, duration, callback, motorCommand], ports);
     }
     
     function capSpeed (speed) {
@@ -725,13 +725,13 @@ var Device = (function () {
     
     Device.prototype.allMotorsOff = function (how) {
         clearDriveTimer();
-        motorsStop(how);
+        motorsStop(how,'all');
     }
     
-    function motorsStop(how) {
+    function motorsStop(how, which) {
         console.log('motorsStop');
         
-        var motorBitField = getMotorBitsHexString('all');
+        var motorBitField = getMotorBitsHexString(which);
         console.log('motorstop motorBitField: ' + motorBitField);
         var howHex = getPackedOutputHexString(howStopCode(how), 1);
         console.log('motorstop howHex: ' + howHex);

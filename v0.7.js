@@ -79,13 +79,13 @@ var Device = (function () {
                             device.steeringControl('B', 'reverse', 100, 2, null);
                         //}, 2000);
                         
-                        //device.readDistanceSensorPort(3, null);
-                        //device.readTouchSensorPort(1, null);
+                        device.readDistanceSensorPort(3, null);
+                        device.readTouchSensorPort(1, null);
                         
-                        // device.readFromMotor('speed', 'A', null);
+                        device.readFromMotor('speed', 'A', null);
                         
-                        //device.readColorSensorPort(1, 'reflected', null);
-                        //device.readColorSensorPort(2, 'color', null);
+                        device.readColorSensorPort(1, 'reflected', null);
+                        device.readColorSensorPort(2, 'color', null);
                         //device.readColorSensorPort(1, 'RGBcolor', null);
                     }, 5000);
                     
