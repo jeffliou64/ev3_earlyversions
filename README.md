@@ -20,17 +20,17 @@ v0.7.js: Read from Motors and read from touch sensor functional. One existing is
 
 v0.8.js: (readremotebuttonport (and IR responses)), fix MOTOR bugs & make them more independent.
 
-1) fixed motor differences (each motor can now run and stop independently);
+    1) fixed motor differences (each motor can now run and stop independently);
          
-2) write motor degrees somewhat working (the angle that is spun is often slightly off from what was sent)
+    2) write motor degrees somewhat working (the angle that is spun is often slightly off from what was sent)
          
-                note: higher speed makes it even more unreliable (maybe have Tickle set a low speed (10%)
+            note: higher speed makes it even more unreliable (maybe have Tickle set a low speed (10%)
                 
-3) make sure all IR responses work properly
+    3) make sure all IR responses work properly
          
-4) < get remote button port reading complete >
+    4) < get remote button port reading complete >
          
-5) < test all motors, test all reading types (color, touch, IR, motor, UI) , test remote buttons, test brick buttons >
+    5) < test all motors, test all reading types (color, touch, IR, motor, UI) , test remote buttons, test brick buttons >
 
 
 
