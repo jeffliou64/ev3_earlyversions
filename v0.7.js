@@ -24,7 +24,6 @@ var pingTimeout = pingTimeout || null;
 var connectionTimeout = connectionTimeout || null;
 var waitDuration = waitDuration || 0;
 
-
 var waitingForPing = waitingForPing || false;
 var waitingForInitialConnection = waitingForInitialConnection || false;
 
@@ -75,14 +74,14 @@ var Device = (function () {
                     waitingForInitialConnection = true;
                     
                     setTimeout(function () {
-                        // device.steeringControl('A', 'forward', 2, null);
-                        // setTimeout(function () {
-                        //     device.steeringControl('A', 'reverse', 2, null);
-                        // }, 2000);
+                        device.steeringControl('A', 'forward', 2, null);
+                        setTimeout(function () {
+                            device.steeringControl('A', 'reverse', 2, null);
+                        }, 2000);
                         
-                        //device.readDistanceSensorPort(1, null);
+                        device.readDistanceSensorPort(3, null);
                         device.readTouchSensorPort(1, null);
-                        //device.readColorSensorPort(1, 'reflected', null);
+                        device.readColorSensorPort(1, 'reflected', null);
                         device.readColorSensorPort(2, 'color', null);
                         //device.readColorSensorPort(1, 'RGBcolor', null);
                     }, 5000);
