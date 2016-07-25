@@ -74,23 +74,16 @@ var Device = (function () {
                     testTheConnection(startupBatteryCheckCallback);
                     waitingForInitialConnection = true;
                     
-                    // setTimeout(function () {
-                    //     device.readColorSensorPort(1, 'color', null);
-                    // }, 1000);
-                    
                     setTimeout(function () {
                         // device.steeringControl('A', 'forward', 2, null);
                         // setTimeout(function () {
                         //     device.steeringControl('A', 'reverse', 2, null);
                         // }, 2000);
                         
-                        device.readDistanceSensorPort(1, null);
-                        
-                        //device.readTouchSensorPort(1, null);
-                        // device.readColorSensorPort(1, 'reflected', null);
-                        // device.readColorSensorPort(1, 'color', null);
-                        //device.steeringControl('A', 'forward', 2, null);
-                        //device.steeringControl('A', 'reverse', 2, null);
+                        //device.readDistanceSensorPort(1, null);
+                        device.readTouchSensorPort(1, null);
+                        //device.readColorSensorPort(1, 'reflected', null);
+                        device.readColorSensorPort(2, 'color', null);
                         //device.readColorSensorPort(1, 'RGBcolor', null);
                     }, 5000);
                     
@@ -161,25 +154,6 @@ var Device = (function () {
             if (poller) {
                 clearInterval(poller);
             }
-            // if (touchPoller) {
-            //     clearInterval(touchPoller);
-            // }
-            // if (colorPoller) {
-            //     clearInterval(colorPoller);
-            // }
-            // if (IRPoller) {
-            //     clearInterval(IRPoller);
-            // }
-            // if (GYROPoller) {
-            //     clearInterval(GYROPoller);
-            // }
-            // if (MOTORPoller) {
-            //     clearInterval(MOTORPoller);
-            // }
-            // if (UIPoller) {
-            //     clearInterval(UIPoller);
-            // }
-            
             EV3Connected = false;
         }
     }
@@ -190,7 +164,7 @@ var Device = (function () {
         EV3Connected = true;
         connecting = false;
         
-        playStartUpTones();
+        //playStartUpTones();
         
         if (result < 11 && !warnedAboutBattery) {
             alert('Your Battery is getting low. ');
@@ -217,7 +191,6 @@ var Device = (function () {
             warnedAboutBattery = true;
         }
     }
-    
     
     function playStartUpTones() {
         var tonedelay = 1000;
@@ -888,12 +861,11 @@ var Device = (function () {
     }
     
     function readFromSensor(port, type, mode, callback) {
-        var theCommand = createMessage([DIRECT_COMMAND_REPLY_PREFIX +
+        var theCommand = createMessage(DIRECT_COMMAND_REPLY_PREFIX +
             READ_SENSOR +
             hexcouplet(port) +
             type +
-            mode + '60']);
-        sensorType = type;
+            mode + '60');
         
         addToQueryQueue([port, type, mode, callback, theCommand]);
     }
@@ -905,9 +877,6 @@ var Device = (function () {
             mode +
             "0160"); // result stuff
         
-        sensorType = type;
-        
-            
         addToQueryQueue([port, type, mode, callback, theCommand]);
     }
     
@@ -917,8 +886,6 @@ var Device = (function () {
             hexcouplet(port + 12) + "00" + // type
             mode +
             "0160"); // result stuff
-        
-        sensorType = type;
             
         addToQueryQueue([port, type, mode, callback, theCommand]);
     }
@@ -928,13 +895,8 @@ var Device = (function () {
             UIREAD + subtype +
             "60");
         
-        sensorType = subtype;
-        
         addToQueryQueue([port, UIREAD, subtype, callback, theCommand]);
     }
-    
-    
-    
     
     return Device;
 } ());

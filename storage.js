@@ -8,6 +8,26 @@ var GYROPoller = GYROPoller || null;
 var MOTORPoller = MOTORPoller || null;
 var UIPoller = UIPoller || null;
 
+            // if (touchPoller) {
+            //     clearInterval(touchPoller);
+            // }
+            // if (colorPoller) {
+            //     clearInterval(colorPoller);
+            // }
+            // if (IRPoller) {
+            //     clearInterval(IRPoller);
+            // }
+            // if (GYROPoller) {
+            //     clearInterval(GYROPoller);
+            // }
+            // if (MOTORPoller) {
+            //     clearInterval(MOTORPoller);
+            // }
+            // if (UIPoller) {
+            //     clearInterval(UIPoller);
+            // }
+
+
 function setupSensorWatchdog(type, port, mode, callback) {
         console.log('checking sensor: ' + sensorType);
         if (touchPoller) {

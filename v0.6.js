@@ -75,9 +75,9 @@ var Device = (function () {
                     waitingForInitialConnection = true;
                     
                     setTimeout(function () {
-                        device.readDistanceSensorPort(1, null);
-                        //device.readColorSensorPort(1, 'reflected', null);
-                        //device.readColorSensorPort(1, 'color', null);
+                        //device.readDistanceSensorPort(1, null);
+                        device.readColorSensorPort(1, 'reflected', null);
+                        device.readColorSensorPort(1, 'color', null);
                         //device.readColorSensorPort(1, 'RGBcolor', null);
                     }, 5000);
                     
@@ -858,7 +858,6 @@ var Device = (function () {
             hexcouplet(port) +
             type +
             mode + '60']);
-        sensorType = type;
         
         addToQueryQueue([port, type, mode, callback, theCommand]);
     }
@@ -869,9 +868,6 @@ var Device = (function () {
             hexcouplet(port) + "00" + // type
             mode +
             "0160"); // result stuff
-        
-        sensorType = type;
-        
             
         addToQueryQueue([port, type, mode, callback, theCommand]);
     }
@@ -882,8 +878,6 @@ var Device = (function () {
             hexcouplet(port + 12) + "00" + // type
             mode +
             "0160"); // result stuff
-        
-        sensorType = type;
             
         addToQueryQueue([port, type, mode, callback, theCommand]);
     }
@@ -892,8 +886,6 @@ var Device = (function () {
         var theCommand = createMessage(DIRECT_COMMAND_REPLY_PREFIX +
             UIREAD + subtype +
             "60");
-        
-        sensorType = subtype;
         
         addToQueryQueue([port, UIREAD, subtype, callback, theCommand]);
     }

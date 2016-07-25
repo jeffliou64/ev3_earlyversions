@@ -19,4 +19,8 @@ v0.7.js: (readfrommotor & readfromtouchsensor (not sure if this will work withou
 v0.8.js: (readremotebuttonport (and IR responses))
 
 
+
+
+
+
 v1.0.js: everything functional at baselevel. next step: test multiple commands at once (queryqueue), simplify code, mesh blocks together
