@@ -18,23 +18,24 @@ v0.7.js: Read from Motors and read from touch sensor functional. One existing is
          and that the queue currently adds up a lot of performance time (listing a bunch of commands will stop motors from stopping until all commands complete)
          Also, there seems to be a slight difference between the motor value given and the motor value read.
 
-v0.8.js: (readremotebuttonport (and IR responses)), fix MOTOR bugs & make them more independent.
+v0.8.js: MADE THE FOLLOWING CHANGES:
 
-    1) fixed motor differences (each motor can now run and stop independently);
-         
-    2) write motor degrees somewhat working (the angle that is spun is often slightly off from what was sent)
-         
-            note: higher speed makes it even more unreliable (maybe have Tickle set a low speed (10%)
-                
-    3) make sure all IR responses work properly
-         
-    4) < get remote button port reading complete >
-         
-    5) < test all motors, test all reading types (color, touch, IR, motor, UI) , test remote buttons, test brick buttons >
+    1) fixed motor differences (Motor functions fixed, can now individually be monitored (start and stop independently). );
+    
+    2) write-motor-degrees somewhat working (the angle that is spun is often slightly off from what was sent)
+    
+        note: higher speed makes it even more unreliable (maybe have Tickle set a low speed (10%))
+        
+    3) IR Sensor can now receive and parse which button is being pressed on the IR remote
+    
+    4) ReadButtonPort works, currently just runs readTouchSensor code. Not sure what to do about it.
+    
+    5) TESTED: 
+            
+        Motors: start_moving, timed, stop_all, stop_one, read_from_motor
+        
+        Sensors: read_IR_Distance, read_touch_sensor, read_color_sensor(color, intensity), read_IR_remote_sensor
 
 
 
-
-
-
-v1.0.js: everything functional at baselevel. next step(s): simplify code, mesh blocks together, increase performance efficiency
+v1.0.js: everything functional at baselevel. next step(s): simplify code, mesh blocks together, increase performance efficiency. Continue testing IRRemote, UIButtons, RGBColor, watchDog code, callbacks

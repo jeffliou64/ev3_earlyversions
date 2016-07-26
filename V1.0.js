@@ -1,6 +1,5 @@
 var SerialPort = require('serialport');
 var q = require('q');
-//var window = require('window');
 
 var DEBUG_NO_EV3 = false;
 var theEV3DevicePort = theEV3DevicePort || null;
@@ -23,6 +22,20 @@ var poller = poller || null;
 var pingTimeout = pingTimeout || null;
 var connectionTimeout = connectionTimeout || null;
 var waitDuration = waitDuration || 0;
+
+var readTouchSensorCallback = readTouchSensorCallback || null;
+var readColorSensorCallback = readColorSensorCallback || null;
+var readDistanceSensorCallback = readDistanceSensorCallback || null;
+var readRemoteSensorCallback = readRemoteSensorCallback || null;
+var readFromAMotorCallback = readFromAMotorCallback || null;
+var readBatterySensorCallback = readBatterySensorCallback || null;
+
+var writeToMotorYesTimedCallback = writeToMotorYesTimedCallback || null;
+var writeToMotornotTimedCallback = writeToMotornotTimedCallback || null;
+var writeToStopAllMotorsCallback = writeToStopAllMotorsCallback || null;
+var playToneCallback = playToneCallback || null;
+var playFreqCallback = playFreqCallback || null;
+//var playFreqM2MCallback = playFreqM2MCallback || null;
 
 var waitingForPing = waitingForPing || false;
 var waitingForInitialConnection = waitingForInitialConnection || false;
@@ -47,7 +60,6 @@ var Device = (function () {
         
         waitingQueries = [];
         thePendingQuery = null;
-        
         counter = 0;
         
         var promises = [];
@@ -74,20 +86,29 @@ var Device = (function () {
                     waitingForInitialConnection = true;
                     
                     setTimeout(function () {
-                        device.steeringControl('A', 'forward', 100, 2, null);
-                        //setTimeout(function () {
-                            device.steeringControl('B', 'reverse', 100, 2, null);
-                        //}, 2000);
+                        // device.steeringControl('A', 'forward', 100, 6, null);
+                        // device.steeringControl('B', 'reverse', 100, 5, null);
+                        // setTimeout(function () {
+                        //     device.allMotorsOff(1);
+                        // }, 3000);
                         
-                        device.readDistanceSensorPort(3, null);
-                        device.readTouchSensorPort(1, null);
+                        // device.readFromMotor('speed', 'A', null);
                         
-                        device.readFromMotor('speed', 'A', null);
+                        // setTimeout(function () {
+                        //     device.motorDegrees('B', 100, 90, 1);
+                        // }, 7000);
+                        //device.motorDegrees('B', 100, 90, 1);
                         
-                        device.readColorSensorPort(1, 'reflected', null);
-                        device.readColorSensorPort(2, 'color', null);
+                        //device.whenButtonPressed(1);
+                        //device.whenRemoteButtonPressed(null, 3);
+                        //device.readDistanceSensorPort(3, null);
+                        //device.readTouchSensorPort(1, null);
+                        
+                        //device.readColorSensorPort(1, 'reflected', null);
+                        //device.readColorSensorPort(2, 'color', null);
                         //device.readColorSensorPort(1, 'RGBcolor', null);
                     }, 5000);
+                    
                 });
                 
                 if (!connecting && !EV3Connected) {
@@ -161,7 +182,7 @@ var Device = (function () {
         EV3Connected = true;
         connecting = false;
         
-        //playStartUpTones();
+        playStartUpTones();
         
         if (result < 11 && !warnedAboutBattery) {
             alert('Your Battery is getting low. ');
@@ -242,8 +263,7 @@ var Device = (function () {
                     theResult = colors[num];
                 }
                 else {
-                    theResult = num;
-                    //theResult = "none";
+                    theResult = "none";
                 }
             }
         }
@@ -282,9 +302,9 @@ var Device = (function () {
             callback(theResult);
         }
         
+        console.log('');
         // done with this query
         thePendingQuery = null;
-        console.log('');
         // go look for the next query
         executeQueryQueueAgain();
     }
@@ -416,6 +436,15 @@ var Device = (function () {
         return "00";
     }
     
+    function getIRButtonNameForCode(inButtonCode) {
+        for (var i = 0; i < IRbuttonCodes.length; i++) {
+            if (inButtonCode == IRbuttonCodes[i]) {
+                return IRbuttonNames[i];
+            }
+        }
+        return "";
+    }
+    
     function createMessage(str) {
         return str;
     }
@@ -438,7 +467,6 @@ var Device = (function () {
         for (var i = 0; i < str.length; i += 2) {
             mess[(i / 2) + 4] = parseInt(str.substr(i, 2), 16);
         }
-        //console.log(mess);
         return mess;
     }
     
@@ -457,10 +485,7 @@ var Device = (function () {
     }
     
     function sendCommand(commandArray) {
-        //console.log('Command Array: ' +commandArray);
         if ((EV3Connected || connecting) && theEV3DevicePort) {
-            //console.log("sending: " + createHexString(commandArray));
-            //console.log(commandArray);
             theEV3DevicePort.write(commandArray, function (error) {
                 if (error) {
                     console.log('error: ' + error);
@@ -478,7 +503,7 @@ var Device = (function () {
         } , 1000);
     }    
     
-    function executeQueryQueue() {
+    function executeQueryQueue(ports) {
         if (waitingQueries.length == 0) {
             return;
         }
@@ -493,7 +518,6 @@ var Device = (function () {
             // }
             return;
         }
-        //console.log(waitingQueries);
         
         var query_info = waitingQueries[0]; //peek at first in line
         var thisCommand = null;
@@ -511,23 +535,22 @@ var Device = (function () {
                 if (thePendingQuery[0] == port) {
                     // special case: we are actually already in the process of querying this same sensor (should we also compare the type and mode, or maybe just match the command string?)
                     // so we don't want to bother calling it again
-                    // if (thePendingQuery[4] == theCommand) {
-                    //     waitingQueries.shift();
-                    //     if (callback) {
-                    //         console.log('2');
-                    //         waitingCallbacks[port].push(callback);
-                    //     }
-                    // }
+                    if (thePendingQuery[4] == theCommand) {
+                        console.log('2');
+                        waitingQueries.shift();
+                        if (callback) {
+                            waitingCallbacks[port].push(callback);
+                        }
+                    }
                     return;
                 }
                 //do nothing. we'll try again after the query finishes
                 return;
             }
-            //console.log(waitingQueries);
+            
             waitingQueries.shift(); //remove it from the queue
             thePendingQuery = query_info;
             console.log('command before packing: ' + theCommand);
-            //actually go ahead and make the query
             var packedCommand = packMessageForSending(theCommand);
             console.log('packed command: ' + packedCommand);
             sendCommand(packedCommand);
@@ -550,7 +573,7 @@ var Device = (function () {
                     driveTimer = setTimeout(function () {
                         if (duration > 0) // allow zero duration to run motors asynchronously
                         {
-                            motorsStop('break'); // xxx
+                            motorsStop('break', ports); // xxx
                         }
                         if (callback)
                             callback();
@@ -565,9 +588,7 @@ var Device = (function () {
             }
             waitingQueries.shift(); // remove it from the queue
             
-            // actually go ahead and make the query
             console.log('command before packing: ' + theCommand);
-            //actually go ahead and make the query
             var packedCommand = packMessageForSending(theCommand);
             console.log('packed command: ' + packedCommand);
             sendCommand(packedCommand);
@@ -578,7 +599,7 @@ var Device = (function () {
         }
     }
     
-    function addToQueryQueue(query_info) {
+    function addToQueryQueue(query_info, ports) {
         for (var i = 0; i < waitingQueries.length; i++) {
             console.log('checking waitingQueries.length');
             var next_query = waitingQueries[i];
@@ -597,23 +618,18 @@ var Device = (function () {
                 //     console.log("coalescing query because there's already one in queue");
                 //     return;
                 // }
-                
             }
         }
-        //console.log("query_info: " + query_info);
-        
         waitingQueries.push(query_info);
         console.log('waitingQueries length: ' + waitingQueries.length);
-        executeQueryQueue();
+        executeQueryQueue(ports);
     }
     
     //MOTOR FUNCTIONS
     
     Device.prototype.startMotors = function (which, speed) {
         clearDriveTimer();
-        
         console.log('motor ' + which + " speed: " + speed);
-        
         motorCommand = motor(which, speed);
         
         addToQueryQueue([DRIVE_QUERY, 0, null, motorCommand]);
@@ -659,7 +675,7 @@ var Device = (function () {
                 motorCommand = motor2(ports, speed * -1)
                 break;
         }
-        addToQueryQueue([DRIVE_QUERY_DURATION, duration, callback, motorCommand]);
+        addToQueryQueue([DRIVE_QUERY_DURATION, duration, callback, motorCommand], ports);
     }
     
     function capSpeed (speed) {
@@ -678,7 +694,6 @@ var Device = (function () {
         console.log('got motorsOnCommand: ' + motorsOnCommand);
         return motorsOnCommand;
     }
-    
     
     function motor2(which, speed) {
         speed = capSpeed(speed);
@@ -702,27 +717,27 @@ var Device = (function () {
     }
     
     var driveTimer = 0;
-    //driveCallback = 0;
+    driveCallback = 0;
     
     function clearDriveTimer() {
         if (driveTimer) {
             clearInterval(driveTimer);
         }
-        // if (driveCallback) {
-        //     driveCallback();
-        // }
-        //driveCallback = 0;
+        if (driveCallback) {
+            driveCallback();
+        }
+        driveCallback = 0;
     }
     
     Device.prototype.allMotorsOff = function (how) {
         clearDriveTimer();
-        motorsStop(how);
+        motorsStop(how,'all');
     }
     
-    function motorsStop(how) {
+    function motorsStop(how, which) {
         console.log('motorsStop');
         
-        var motorBitField = getMotorBitsHexString('all');
+        var motorBitField = getMotorBitsHexString(which);
         console.log('motorstop motorBitField: ' + motorBitField);
         var howHex = getPackedOutputHexString(howStopCode(how), 1);
         console.log('motorstop howHex: ' + howHex);
@@ -783,7 +798,7 @@ var Device = (function () {
     
     //READ FUNCTIONS/METHODS
     
-    Device.prototype.whenButtonPressed = function (port) {
+    Device.prototype.whenButtonPressed = function (port) { //currently reads from touch sensor from declared port
         if (!theEV3DevicePort || !EV3Connected) {
             return false;
         }
@@ -792,26 +807,22 @@ var Device = (function () {
         return global_sensor_result[portInt];
     }
     
-    Device.prototype.whenRemoteButtonPressed = function (IRButton, port) {
+    Device.prototype.whenRemoteButtonPressed = function (IRButton, port) { //reads from IRremote Sensor (not sure if waits or auto reads) 
         if (!theEV3DevicePort || !EV3Connected) {
             return false;
         }
         var portInt = parseInt(port) - 1;
         readIRRemoteSensor(portInt, null);
-        
-        
         return (global_sensor_result[portInt] == IRButton);
     }
     
     Device.prototype.readDistanceSensorPort = function (port, callback) {
         var portInt = parseInt(port) - 1;
-        
-        readFromSensor2(portInt, IR_SENSOR, IR_PROX, callback);
+        readFromSensors(portInt, IR_SENSOR, IR_PROX, callback);
     }
     
     Device.prototype.readRemoteButtonPort = function (port, callback) {
         var portInt = parseInt(port) - 1;
-        
         readIRRemoteSensor(portInt, callback);
     }
     
@@ -837,63 +848,65 @@ var Device = (function () {
         if (mmode == 'speed') {
             mode = "02";
         }
-        readFromAMotor(portInt, READ_FROM_MOTOR, mode, callback);
+        readFromSensors(portInt, READ_FROM_MOTOR, mode, callback);
     }
     
     function readBatteryLevel(callback) {
         console.log('going to read battery level');
         var portInt = 8; //bogus port number
-        UIRead(portInt, UIREAD_BATTERY, callback);
+        readFromSensors(portInt, UIREAD, UIREAD_BATTERY, callback);
     }
     
     function readTouchSensor(portInt, callback) {
-        readFromSensor(portInt, TOUCH_SENSOR, mode0, callback);
+        readFromSensors(portInt, TOUCH_SENSOR, mode0, callback);
     }
     
     function readIRRemoteSensor(portInt, callback) {
-        readFromSensor2(portInt, IR_SENSOR, IR_REMOTE, callback);
+        readFromSensors(portInt, IR_SENSOR, IR_REMOTE, callback);
     }
     
     function readFromColorSensor(portInt, modeCode, callback) {
-        readFromSensor2(portInt, COLOR_SENSOR, modeCode, callback);
+        readFromSensors(portInt, COLOR_SENSOR, modeCode, callback);
     }
     
-    function readFromSensor(port, type, mode, callback) {
-        var theCommand = createMessage(DIRECT_COMMAND_REPLY_PREFIX +
-            READ_SENSOR +
-            hexcouplet(port) +
-            type +
-            mode + '60');
-        
-        addToQueryQueue([port, type, mode, callback, theCommand]);
-    }
-    
-    function readFromSensor2(port, type, mode, callback) {
-        var theCommand = createMessage(DIRECT_COMMAND_REPLY_SENSOR_PREFIX +
-            INPUT_DEVICE_READY_SI + "00" + // layer
-            hexcouplet(port) + "00" + // type
-            mode +
-            "0160"); // result stuff
-        
-        addToQueryQueue([port, type, mode, callback, theCommand]);
-    }
-    
-    function readFromAMotor(port, type, mode, callback) {
-        var theCommand = createMessage(DIRECT_COMMAND_REPLY_SENSOR_PREFIX +
-            INPUT_DEVICE_READY_SI + "00" + // layer
-            hexcouplet(port + 12) + "00" + // type
-            mode +
-            "0160"); // result stuff
-            
-        addToQueryQueue([port, type, mode, callback, theCommand]);
-    }
-    
-    function UIRead(port, subtype, callback) {
-        var theCommand = createMessage(DIRECT_COMMAND_REPLY_PREFIX +
-            UIREAD + subtype +
-            "60");
-        
-        addToQueryQueue([port, UIREAD, subtype, callback, theCommand]);
+    function readFromSensors(port, type, mode, callback) {
+        var theCommand = null;
+        switch (type) {
+            case TOUCH_SENSOR:
+                theCommand = createMessage(DIRECT_COMMAND_REPLY_PREFIX +
+                    READ_SENSOR + hexcouplet(port) + type + mode + '60');
+                addToQueryQueue([port, type, mode, callback, theCommand]);
+                break;
+            case COLOR_SENSOR:
+                theCommand = createMessage(DIRECT_COMMAND_REPLY_SENSOR_PREFIX +
+                    INPUT_DEVICE_READY_SI + "00" + // layer
+                    hexcouplet(port) + "00" + // type
+                    mode + "0160");
+                addToQueryQueue([port, type, mode, callback, theCommand]);
+                break;
+            case IR_SENSOR:
+                theCommand = createMessage(DIRECT_COMMAND_REPLY_SENSOR_PREFIX +
+                    INPUT_DEVICE_READY_SI + "00" + // layer
+                    hexcouplet(port) + "00" + // type
+                    mode + "0160");
+                addToQueryQueue([port, type, mode, callback, theCommand]);
+                break;
+            case READ_FROM_MOTOR:
+                theCommand = createMessage(DIRECT_COMMAND_REPLY_SENSOR_PREFIX +
+                    INPUT_DEVICE_READY_SI + "00" + // layer
+                    hexcouplet(port + 12) + "00" + // type
+                    mode + "0160");
+                addToQueryQueue([port, type, mode, callback, theCommand]);
+                break;
+            case UIREAD:
+                theCommand = createMessage(DIRECT_COMMAND_REPLY_PREFIX +
+                    UIREAD + mode + "60");
+                addToQueryQueue([port, type, mode, callback, theCommand]);
+                break;
+            default:
+                console.log('dafuq is this');
+                break;
+        }
     }
     
     return Device;
