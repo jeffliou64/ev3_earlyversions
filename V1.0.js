@@ -119,6 +119,10 @@ var Device = (function () {
     };
 
     function executeTests() {
+        // var frequencies = { "C4": 262, "D4": 294, "E4": 330, "F4": 349, "G4": 392, "A4": 440, "B4": 494, "C5": 523, "D5": 587, "E5": 659, "F5": 698, "G5": 784, "A5": 880, "B5": 988, "C6": 1047, "D6": 1175, "E6": 1319, "F6": 1397, "G6": 1568, "A6": 1760, "B6": 1976, "C#4": 277, "D#4": 311, "F#4": 370, "G#4": 415, "A#4": 466, "C#5": 554, "D#5": 622, "F#5": 740, "G#5": 831, "A#5": 932, "C#6": 1109, "D#6": 1245, "F#6": 1480, "G#6": 1661, "A#6": 1865 };
+        //var tonedelay = 1000;
+        
+        
         // device.steeringControl('A', 'forward', 100, 6, null);
         // device.steeringControl('B', 'reverse', 100, 5, null);
         // setTimeout(function () {
@@ -140,6 +144,10 @@ var Device = (function () {
         // device.readColorSensorPort(1, 'reflected', null);
         // device.readColorSensorPort(2, 'color', null);
         // device.readColorSensorPort(1, 'RGBcolor', null);
+
+        // setTimeout(function () {
+        //     playFreq(392, 100, 100, null);
+        // }, tonedelay + 150);
     }
 
     function testTheConnection(theCallback) {
@@ -215,23 +223,23 @@ var Device = (function () {
     function playStartUpTones() {
         var tonedelay = 1000;
         setTimeout(function () {
-            playFreqM2M(262, 20);
+            playFreqM2M(262, 100, 100);
         }, tonedelay);
 
         setTimeout(function () {
-            playFreq(392, 20, null);
+            playFreq(392, 100, 100, null);
         }, tonedelay + 150);
 
         setTimeout(function () {
-            playTone('C5', 20, null);
+            playTone('C5', 100, 100, null);
         }, tonedelay + 300);
     }
 
     function receive_handler(data) {
-        console.log('received raw data: ' + data);
+        //console.log('received raw data: ' + data);
         var inputData = new Uint8Array(data);
         console.log('received: ' + inputData);
-        console.log('received: ' + createHexString(inputData));
+        //console.log('received: ' + createHexString(inputData));
 
         if (!(EV3Connected || connecting)) {
             console.log('received data but not connected or connecting');
@@ -477,20 +485,6 @@ var Device = (function () {
             mess[(i / 2) + 4] = parseInt(str.substr(i, 2), 16);
         }
         return mess;
-    }
-
-    function createHexString(arr) {
-        var result = "";
-        for (i in arr) {
-            var str = arr[i].toString(16);
-            str = str.toUpperCase();
-            str = str.length == 0 ? "00" :
-                str.length == 1 ? "0" + str :
-                    str.length == 2 ? str :
-                        str.substring(str.length - 2, str.length);
-            result += str;
-        }
-        return result;
     }
 
     function sendCommand(commandArray) {
@@ -767,11 +761,11 @@ var Device = (function () {
     var IRbuttonNames = ['Top Left', 'Bottom Left', 'Top Right', 'Bottom Right', 'Top Bar'];
     var IRbuttonCodes = [1, 2, 3, 4, 9];
 
-    function playTone(tone, duration, callback) {
+    function playTone(tone, duration, volume, callback) {
+        var vol = capVolume(volume);
         var freq = frequencies[tone];
         console.log('playTone: ' + tone + ' duration: ' + duration + ' freq: ' + freq);
-        var volume = 100;
-        var volString = getPackedOutputHexString(volume, 1);
+        var volString = getPackedOutputHexString(vol, 1);
         var freqString = getPackedOutputHexString(freq, 2);
         var durString = getPackedOutputHexString(duration, 2);
 
@@ -779,10 +773,10 @@ var Device = (function () {
         addToQueryQueue([TONE_QUERY, duration, callback, toneCommand]);
     }
 
-    function playFreq(freq, duration, callback) {
+    function playFreq(freq, duration, volume, callback) {
+        var vol = capVolume(volume);
         console.log('playFreq duration: ' + duration + ' freq: ' + freq);
-        var volume = 100;
-        var volString = getPackedOutputHexString(volume, 1);
+        var volString = getPackedOutputHexString(vol, 1);
         var freqString = getPackedOutputHexString(freq, 2);
         var durString = getPackedOutputHexString(duration, 2);
 
@@ -790,15 +784,21 @@ var Device = (function () {
         addToQueryQueue([TONE_QUERY, duration, callback, toneCommand]);
     }
 
-    function playFreqM2M(freq, duration) {
+    function playFreqM2M(freq, duration, volume) {
+        var vol = capVolume(volume);
         console.log('playFreqM2M duration: ' + duration + ' freq: ' + freq);
-        var volume = 100;
-        var volString = getPackedOutputHexString(volume, 1);
+        var volString = getPackedOutputHexString(vol, 1);
         var freqString = getPackedOutputHexString(freq, 2);
         var durString = getPackedOutputHexString(duration, 2);
 
         var toneCommand = createMessage(DIRECT_COMMAND_PREFIX + PLAYTONE + volString + freqString + durString);
         addToQueryQueue([TONE_QUERY, 0, null, toneCommand]);
+    }
+    
+    function capVolume(volume) {
+        if (volume > 100) { volume = 100; }
+        else if (volume < 0) { volume = 0; }
+        return volume;
     }
 
     //READ FUNCTIONS/METHODS
