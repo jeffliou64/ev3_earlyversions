@@ -85,30 +85,6 @@ var Device = (function () {
                     testTheConnection(startupBatteryCheckCallback);
                     waitingForInitialConnection = true;
                     
-                    setTimeout(function () {
-                        // device.steeringControl('A', 'forward', 100, 6, null);
-                        // device.steeringControl('B', 'reverse', 100, 5, null);
-                        // setTimeout(function () {
-                        //     device.allMotorsOff(1);
-                        // }, 3000);
-                        
-                        // device.readFromMotor('speed', 'A', null);
-                        
-                        // setTimeout(function () {
-                        //     device.motorDegrees('B', 100, 90, 1);
-                        // }, 7000);
-                        //device.motorDegrees('B', 100, 90, 1);
-                        
-                        //device.whenButtonPressed(1);
-                        //device.whenRemoteButtonPressed(null, 3);
-                        //device.readDistanceSensorPort(3, null);
-                        //device.readTouchSensorPort(1, null);
-                        
-                        //device.readColorSensorPort(1, 'reflected', null);
-                        //device.readColorSensorPort(2, 'color', null);
-                        //device.readColorSensorPort(1, 'RGBcolor', null);
-                    }, 5000);
-                    
                 });
                 
                 if (!connecting && !EV3Connected) {
@@ -139,6 +115,30 @@ var Device = (function () {
             });
         });
     };
+    
+    function executeTests() {
+        device.steeringControl('A', 'forward', 100, 6, null);
+        device.steeringControl('B', 'reverse', 100, 5, null);
+        setTimeout(function () {
+            device.allMotorsOff(1);
+        }, 3000);
+        
+        device.readFromMotor('speed', 'A', null);
+        
+        setTimeout(function () {
+            device.motorDegrees('B', 100, 90, 1);
+        }, 7000);
+        device.motorDegrees('B', 100, 90, 1);
+        
+        device.whenButtonPressed(1);
+        device.whenRemoteButtonPressed(null, 3);
+        device.readDistanceSensorPort(3, null);
+        device.readTouchSensorPort(1, null);
+        
+        device.readColorSensorPort(1, 'reflected', null);
+        device.readColorSensorPort(2, 'color', null);
+        device.readColorSensorPort(1, 'RGBcolor', null);
+    }
     
     function testTheConnection(theCallback) {
         readBatteryLevel(theCallback);
@@ -190,6 +190,8 @@ var Device = (function () {
         }
         
         setupWatchdog();
+        
+        executeTests();
         
         if (lastCommandWeWereTrying) {
             waitingQueries.push(lastCommandWeWereTrying);
