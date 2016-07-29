@@ -9,7 +9,7 @@ var potentialEV3Devices = potentialEV3Devices || [];
 
 var waitingCallbacks = waitingCallbacks || [[], [], [], [], [], [], [], [], []];
 var waitingQueries = waitingQueries || [, , , , , ,];
-var global_sensor_result = global_sensor_result || [0, 0, 0, 0, 0, 0, 0, 0, 0];
+var global_sensor_result = global_sensor_result || [0, 0, 0, 0, 0, 0, 0, 0, 0]; //not used
 var thePendingQuery = thePendingQuery || null;
 
 var connecting = connecting || false;
@@ -119,35 +119,50 @@ var Device = (function () {
     };
 
     function executeTests() {
-        // var frequencies = { "C4": 262, "D4": 294, "E4": 330, "F4": 349, "G4": 392, "A4": 440, "B4": 494, "C5": 523, "D5": 587, "E5": 659, "F5": 698, "G5": 784, "A5": 880, "B5": 988, "C6": 1047, "D6": 1175, "E6": 1319, "F6": 1397, "G6": 1568, "A6": 1760, "B6": 1976, "C#4": 277, "D#4": 311, "F#4": 370, "G#4": 415, "A#4": 466, "C#5": 554, "D#5": 622, "F#5": 740, "G#5": 831, "A#5": 932, "C#6": 1109, "D#6": 1245, "F#6": 1480, "G#6": 1661, "A#6": 1865 };
-        //var tonedelay = 1000;
-        
-        
-        // device.steeringControl('A', 'forward', 100, 6, null);
-        // device.steeringControl('B', 'reverse', 100, 5, null);
-        // setTimeout(function () {
-        //     device.allMotorsOff(1);
-        // }, 3000);
+        setTimeout(function () {
+            // var frequencies = { "C4": 262, "D4": 294, "E4": 330, "F4": 349, "G4": 392, "A4": 440, "B4": 494, "C5": 523, "D5": 587, "E5": 659, "F5": 698, "G5": 784, "A5": 880, "B5": 988, "C6": 1047, "D6": 1175, "E6": 1319, "F6": 1397, "G6": 1568, "A6": 1760, "B6": 1976, "C#4": 277, "D#4": 311, "F#4": 370, "G#4": 415, "A#4": 466, "C#5": 554, "D#5": 622, "F#5": 740, "G#5": 831, "A#5": 932, "C#6": 1109, "D#6": 1245, "F#6": 1480, "G#6": 1661, "A#6": 1865 };
+            // var tonedelay = 1000;
 
-        // device.readFromMotor('speed', 'A', null);
+            device.steeringControl('D', 'forward', 25, 2, null);
+            device.steeringControl('B', 'reverse', 20, 2, null);
 
-        // setTimeout(function () {
-        //     device.motorDegrees('B', 100, 90, 1);
-        // }, 7000);
-        // device.motorDegrees('B', 100, 90, 1);
+            // device.startMotors('A', 100);
+            // device.startMotors('B', -100);
 
-        // device.whenButtonPressed(1);
-        // device.whenRemoteButtonPressed(null, 3);
-        // device.readDistanceSensorPort(3, null);
-        // device.readTouchSensorPort(1, null);
+            // setTimeout(function () {
+            //     motorsStop('coo', 'A');
+            //     motorsStop('break', 'B');
+            // }, 2000)
 
-        // device.readColorSensorPort(1, 'reflected', null);
-        // device.readColorSensorPort(2, 'color', null);
-        // device.readColorSensorPort(1, 'RGBcolor', null);
+            // setTimeout(function () {
+            //     device.allMotorsOff(1);
+            // }, 3000);
+            //device.readFromMotor('speed', 'A', null);
+            
+            
+            //setTimeout(function () {
+            //device.readFromMotor('', 'A', null);
+            //device.readFromMotor('', 'D', null);
+            //}, 100);
+            
+            
+            // setTimeout(function () {
+            //     device.motorDegrees('B', 100, 90, 1);
+            // }, 7000);
 
-        // setTimeout(function () {
-        //     playFreq(392, 100, 100, null);
-        // }, tonedelay + 150);
+            // device.whenButtonPressed(1);
+            
+            // device.readDistanceSensorPort(3, null);
+            // device.readTouchSensorPort(1, null);
+
+            device.readColorSensorPort(1, 'reflected', null);
+            // device.readColorSensorPort(4, 'color', null);
+            // device.readColorSensorPort(1, 'RGBcolor', null);
+
+            // setTimeout(function () {
+            //     playFreq(392, 100, 100, null);
+            // }, tonedelay + 150);
+        }, 3000)
     }
 
     function testTheConnection(theCallback) {
@@ -192,7 +207,7 @@ var Device = (function () {
         EV3Connected = true;
         connecting = false;
 
-        playStartUpTones();
+        //playStartUpTones();
 
         if (result < 11 && !warnedAboutBattery) {
             alert('Your Battery is getting low. ');
@@ -239,18 +254,15 @@ var Device = (function () {
         //console.log('received raw data: ' + data);
         var inputData = new Uint8Array(data);
         console.log('received: ' + inputData);
-        //console.log('received: ' + createHexString(inputData));
-
         if (!(EV3Connected || connecting)) {
             console.log('received data but not connected or connecting');
             return;
         }
-
         if (!thePendingQuery) {
             console.log("received data but didn't expect it");
             return;
         }
-
+        
         var theResult = null;
 
         var port = thePendingQuery[0];
@@ -260,12 +272,13 @@ var Device = (function () {
         var theCommand = thePendingQuery[4];
 
         if (type == TOUCH_SENSOR) {
+            console.log('port: ' + port + 1);
             var result = inputData[5];
             theResult = (result == 100);
         }
         else if (type == COLOR_SENSOR) {
+            console.log('port: ' + port + 1);
             var num = Math.floor(getFloatResult(inputData));
-            console.log(num);
             console.log(getFloatResult(inputData));
             if (mode == AMBIENT_INTENSITY || mode == REFLECTED_INTENSITY) {
                 theResult = num;
@@ -279,8 +292,8 @@ var Device = (function () {
                 }
             }
         }
-
         else if (type == IR_SENSOR) {
+            console.log('port: ' + port + 1);
             if (mode == IR_PROX) {
                 console.log('ollo');
                 console.log('input data: ' + inputData);
@@ -290,14 +303,13 @@ var Device = (function () {
             else if (mode == IR_REMOTE)
                 theResult = getIRButtonNameForCode(getFloatResult(inputData));
         }
-        else if (type == GYRO_SENSOR) {
-            theResult = getFloatResult(inputData);
-        }
         else if (type == READ_FROM_MOTOR) {
+            console.log('port: ' + getMotorName(port));
             theResult = getFloatResult(inputData);
         }
         else if (type == UIREAD) {
             if (mode == UIREAD_BATTERY) {
+                console.log('port: UI');
                 theResult = inputData[5];
             }
         }
@@ -401,6 +413,17 @@ var Device = (function () {
         else if (which == "D")
             return 7;
     }
+    
+    function getMotorName(which) {
+        if (which == 4)
+            return 'A';
+        else if (which == 5)
+            return 'B';
+        else if (which == 6)
+            return 'C';
+        else if (which == 7)
+            return 'D';
+    }
 
     function hexcouplet(num) {
         var str = num.toString(16);
@@ -415,15 +438,15 @@ var Device = (function () {
         var a = new ArrayBuffer(4);
         var c = new Float32Array(a);
         var arr = new Uint8Array(a);
-        console.log('a: ' + a);
-        console.log('c: ' + c);
-        console.log('arr: ' + arr);
+        // console.log('a: ' + a);
+        // console.log('c: ' + c);
+        // console.log('arr: ' + arr);
         arr[0] = inputData[5];
         arr[1] = inputData[6];
         arr[2] = inputData[7];
         arr[3] = inputData[8];
-        console.log('arr: ' + arr);
-        console.log(c);
+        // console.log('arr: ' + arr);
+        // console.log(c);
         return c[0];
     }
 
@@ -503,7 +526,7 @@ var Device = (function () {
     function executeQueryQueueAgain() {
         setTimeout(function () {
             executeQueryQueue();
-        }, 1000);
+        }, 100);
     }
 
     function executeQueryQueue(ports) {
@@ -576,7 +599,7 @@ var Device = (function () {
                     driveTimer = setTimeout(function () {
                         if (duration > 0) // allow zero duration to run motors asynchronously
                         {
-                            motorsStop('break', ports); // xxx
+                            motorsStop('cooc', ports); // xxx
                         }
                         if (callback)
                             callback();
@@ -621,7 +644,6 @@ var Device = (function () {
                 //     console.log("coalescing query because there's already one in queue");
                 //     return;
                 // }
-                // this part is only used for removing commands that are repeated back to back (which I don't think we want)
             }
         }
         waitingQueries.push(query_info);
@@ -636,7 +658,7 @@ var Device = (function () {
         console.log('motor ' + which + " speed: " + speed);
         motorCommand = motor(which, speed);
 
-        addToQueryQueue([DRIVE_QUERY, 0, null, motorCommand], ports);
+        addToQueryQueue([DRIVE_QUERY, 0, null, motorCommand]);
         console.log("Added start motor. Queue length now: " + waitingQueries.length);
     }
 
@@ -756,10 +778,10 @@ var Device = (function () {
 
     var frequencies = { "C4": 262, "D4": 294, "E4": 330, "F4": 349, "G4": 392, "A4": 440, "B4": 494, "C5": 523, "D5": 587, "E5": 659, "F5": 698, "G5": 784, "A5": 880, "B5": 988, "C6": 1047, "D6": 1175, "E6": 1319, "F6": 1397, "G6": 1568, "A6": 1760, "B6": 1976, "C#4": 277, "D#4": 311, "F#4": 370, "G#4": 415, "A#4": 466, "C#5": 554, "D#5": 622, "F#5": 740, "G#5": 831, "A#5": 932, "C#6": 1109, "D#6": 1245, "F#6": 1480, "G#6": 1661, "A#6": 1865 };
 
-    var colors = ['none', 'black', 'blue', 'green', 'yellow', 'red', 'white'];
+    var colors = ['none', 'black', 'blue', 'green', 'yellow', 'red', 'white', 'brown'];
 
-    var IRbuttonNames = ['Top Left', 'Bottom Left', 'Top Right', 'Bottom Right', 'Top Bar'];
-    var IRbuttonCodes = [1, 2, 3, 4, 9];
+    var IRbuttonNames = ['Top Left', 'Bottom Left', 'Top Right', 'Bottom Right', 'Top Left & Top Right', 'Top Left & Bottom Right', 'Bottom Left & Top Right', 'Bottom Left & Bottom Right', 'Top Bar', 'Top Left & Bottom Left', 'Top Right & Bottom Right'];
+    var IRbuttonCodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
     function playTone(tone, duration, volume, callback) {
         var vol = capVolume(volume);
@@ -802,14 +824,14 @@ var Device = (function () {
     }
 
     //READ FUNCTIONS/METHODS
-
+    
     Device.prototype.whenButtonPressed = function (port) { //currently reads from touch sensor from declared port
         if (!theEV3DevicePort || !EV3Connected) {
             return false;
         }
         var portInt = parseInt(port) - 1;
         readTouchSensor(portInt, null);
-        return global_sensor_result[portInt];
+        //return global_sensor_result[portInt];
     }
 
     Device.prototype.whenRemoteButtonPressed = function (IRButton, port) { //reads from IRremote Sensor (not sure if waits or auto reads) 

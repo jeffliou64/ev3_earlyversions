@@ -86,24 +86,24 @@ var Device = (function () {
                     waitingForInitialConnection = true;
                     
                     setTimeout(function () {
-                        device.steeringControl('A', 'forward', 100, 6, null);
-                        //device.steeringControl('B', 'reverse', 100, 5, null);
+                        // device.steeringControl('A', 'forward', 100, 6, null);
+                        // device.steeringControl('B', 'reverse', 100, 5, null);
 
-                        setTimeout(function () {
-                            device.allMotorsOff(1);
-                            device.startMotors("B+C", 200);
-                        }, 3000);
+                        // setTimeout(function () {
+                        //     device.allMotorsOff(1);
+                        //     device.startMotors("B+C", 200);
+                        // }, 3000);
                         
                         //device.startMotors('A+D', 1000);
                         
-                        device.readFromMotor('speed', 'A', null);
+                        //device.readFromMotor('speed', 'A', null);
                         
                         // setTimeout(function () {
                         //     device.motorDegrees('C', 100, 90, 1);
                         // }, 7000);
                         
                         //device.whenButtonPressed(1);
-                        //device.whenRemoteButtonPressed(null, 3);
+                        device.whenRemoteButtonPressed(null, 3);
                         //device.readTouchSensorPort(1, null);
                         
                         //device.readColorSensorPort(2, 'reflected', null);
