@@ -37,5 +37,6 @@ v0.8.js: MADE THE FOLLOWING CHANGES:
         Sensors: read_IR_Distance, read_touch_sensor, read_color_sensor(color, intensity), read_IR_remote_sensor
 
 
+V1.0.js: everything functional at baselevel. Added: Volume control, separate testing function, getMotorName, added remaining frequencies, clearSensors function
 
-v1.0.js: everything functional at baselevel. next step(s): simplify code, mesh blocks together, increase performance efficiency. Continue testing IRRemote, UIButtons, RGBColor, watchDog code, callbacks
+V1.1.js: Next Steps: add waitTillDarkLine, figure out built-in sounds, IR Beacon Mode..?, RGB Mode
