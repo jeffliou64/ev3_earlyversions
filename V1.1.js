@@ -49,15 +49,7 @@ var waitingForInitialConnection = waitingForInitialConnection || false;
 var Device = (function () {
     function Device() {
         this.DEBUG_NO_EV3 = false;
-    };
-
-    Device.prototype.getStatus = function () {
-        if (!EV3Connected) {
-            return [disconnected, console.log('disconnected')];
-        }
-        else {
-            return console.log('connected');
-        }
+        this.EV3Connected = false;
     };
 
     Device.prototype.tryToConnect = function () {
@@ -143,9 +135,15 @@ var Device = (function () {
             // var IRbuttonNames = ['Top Left', 'Bottom Left', 'Top Right', 'Bottom Right', 'Top Left & Top Right', 'Top Left & Bottom Right', 'Bottom Left & Top Right', 'Bottom Left & Bottom Right', 'Top Bar', 'Top Left & Bottom Left', 'Top Right & Bottom Right'];
             // var IRbuttonCodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
-            //device.steeringControl('D', 'forward', 25, 2, null);
+            // device.steeringControl('D', 'forward', 10, 1, null);
             //device.steeringControl('B', 'reverse', 20, 2, null);
-
+            
+            // setTimeout(function () {
+            //     device.steeringControl('D', 'reverse', 100, 5, null);
+            //     setTimeout(function () {
+            //         device.readFromMotor('', 'D', null);
+            //     }, 4000);
+            // }, 3000);
             // device.startMotors('A', 100);
             // device.startMotors('B', -100);
 
@@ -157,7 +155,7 @@ var Device = (function () {
             // setTimeout(function () {
             //     device.allMotorsOff(1);
             // }, 3000);
-            //device.readFromMotor('speed', 'A', null);
+            // device.readFromMotor('', 'D', null);
             
             //setTimeout(function () {
             //device.readFromMotor('', 'A', null);
@@ -173,9 +171,9 @@ var Device = (function () {
             // device.readDistanceSensorPort(3, null);
             // device.readTouchSensorPort(1, null);
 
-            device.readColorSensorPort(1, 'reflected', null);
+            // device.readColorSensorPort(1, 'reflected', null);
             // device.readColorSensorPort(4, 'color', null);
-            // device.readColorSensorPort(1, 'RGBcolor', null);
+            device.readColorSensorPort(1, 'RGBcolor', null);
 
             // setTimeout(function () {
             //     playFreq(392, 100, 100, null);
@@ -277,7 +275,7 @@ var Device = (function () {
     }
 
     function receive_handler(data) {
-        //console.log('received raw data: ' + data);
+        console.log(data);
         var inputData = new Uint8Array(data);
         console.log('received: ' + inputData);
         if (!(EV3Connected || connecting)) {
@@ -317,6 +315,13 @@ var Device = (function () {
                     theResult = "none";
                 }
             }
+            else if (mode == COLOR_RAW_RGB) {
+                var redValue = inputData[6];
+                var greenValue = inputData[7];
+                var blueValue = inputData[8];
+                console.log('Red: ' + redValue + ", Green: " + greenValue + ', blue: ' + blueValue);
+                //needs fixing/more understanding
+            }
         }
         else if (type == IR_SENSOR) {
             console.log('port: ' + port + 1);
@@ -332,6 +337,9 @@ var Device = (function () {
         else if (type == READ_FROM_MOTOR) {
             console.log('port: ' + getMotorName(port));
             theResult = getFloatResult(inputData);
+            if (mode == '01') {
+                console.log('net # of degrees turned: ' + theResult * 360);
+            }
         }
         else if (type == UIREAD) {
             if (mode == UIREAD_BATTERY) {
@@ -404,6 +412,8 @@ var Device = (function () {
     var COLOR_VALUE = "02";
     var COLOR_RAW_RGB = "04";
     var READ_FROM_MOTOR = "FOOBAR";
+    var READ_MOTOR_SPINS = "01";
+    var READ_MOTOR_SPEED = "02";
 
     var DRIVE_QUERY = "DRIVE_QUERY";
     var DRIVE_QUERY_DURATION = "DRIVE_QUERY_DURATION";
@@ -464,15 +474,10 @@ var Device = (function () {
         var a = new ArrayBuffer(4);
         var c = new Float32Array(a);
         var arr = new Uint8Array(a);
-        // console.log('a: ' + a);
-        // console.log('c: ' + c);
-        // console.log('arr: ' + arr);
         arr[0] = inputData[5];
         arr[1] = inputData[6];
         arr[2] = inputData[7];
         arr[3] = inputData[8];
-        // console.log('arr: ' + arr);
-        // console.log(c);
         return c[0];
     }
 
@@ -685,7 +690,7 @@ var Device = (function () {
             degrees *= -1;
             speed *= -1;
         }
-
+        
         var motorBitField = getMotorBitsHexString(which);
         var speedBits = getPackedOutputHexString(speed, 1);
         var stepRampUpBits = getPackedOutputHexString(0, 3);
@@ -740,10 +745,10 @@ var Device = (function () {
 
     function motor2(which, speed) {
         speed = capSpeed(speed);
-        var p = which.split("+");
+        var port = which.split("+");
 
-        var motorBitField1 = getMotorBitsHexString(p[0]);
-        var motorBitField2 = getMotorBitsHexString(p[1]);
+        var motorBitField1 = getMotorBitsHexString(port[0]);
+        var motorBitField2 = getMotorBitsHexString(port[1]);
         var motorBitField = getMotorBitsHexString(which);
 
         var speedBits1 = getPackedOutputHexString(speed, 1);
@@ -774,7 +779,7 @@ var Device = (function () {
 
     function motorsStop(how, which) {
         console.log('motorsStop');
-
+        
         var motorBitField = getMotorBitsHexString(which);
         console.log('motorstop motorBitField: ' + motorBitField);
         var howHex = getPackedOutputHexString(howStopCode(how), 1);
@@ -899,9 +904,9 @@ var Device = (function () {
 
     Device.prototype.readFromMotor = function (mmode, which, callback) {
         var portInt = getMotorIndex(which);
-        var mode = "01";
+        var mode = READ_MOTOR_SPINS;
         if (mmode == 'speed') {
-            mode = "02";
+            mode = READ_MOTOR_SPEED;
         }
         readFromSensors(portInt, READ_FROM_MOTOR, mode, callback);
     }
