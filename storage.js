@@ -1,3 +1,18 @@
+//can directly give callbacks to the command, then the waitingCallbacks[] list will shift it once received a value
+// var readTouchSensorCallback = readTouchSensorCallback || null;
+// var readColorSensorCallback = readColorSensorCallback || null;
+// var readDistanceSensorCallback = readDistanceSensorCallback || null;
+// var readRemoteSensorCallback = readRemoteSensorCallback || null;
+// var readFromAMotorCallback = readFromAMotorCallback || null;
+// var readBatterySensorCallback = readBatterySensorCallback || null;
+// var waitUntilDarkLineCallback = waitUntilDarkLineCallback || null;
+
+// var writeToMotorYesTimedCallback = writeToMotorYesTimedCallback || null;
+// var writeToMotornotTimedCallback = writeToMotornotTimedCallback || null;
+// var writeToStopAllMotorsCallback = writeToStopAllMotorsCallback || null;
+// var playToneCallback = playToneCallback || null;
+// var playFreqCallback = playFreqCallback || null;
+//var playFreqM2MCallback = playFreqM2MCallback || null;
 
 var sensorWatchDogInfo = sensorWatchDogInfo || [null, null, null, null];
 var sensorType = sensorType || null;
@@ -135,7 +150,21 @@ function setupSensorWatchdog(type, port, mode, callback) {
     setupSensorWatchdog(type, port, mode, callback);
     console.log('type: ' + type + ', port: ' + port + ', mode: ' + mode + ', callback: ' + callback);
     
-    
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    var frequencies = {
+        "C4": 262, "D4": 294, "E4": 330, "F4": 349, "G4": 392, "A4": 440, "B4": 494,
+        "C5": 523, "D5": 587, "E5": 659, "F5": 698, "G5": 784, "A5": 880, "B5": 988,
+        "C6": 1047, "D6": 1175, "E6": 1319, "F6": 1397, "G6": 1568, "A6": 1760, "B6": 1976,
+        "C7": 2093, "D7": 2349, "E7": 2637, "F7": 2794, "G7": 3136, "A7": 3520, "B7": 3951,
+        "C8": 4186, "D8": 4699, "E8": 5274, "F8": 5588, "G8": 6272, "A8": 7040, "B8": 7902,
+        "C9": 8372, "D9": 9398, "E9": 10548, "F9": 11176, "G9": 12544, "A9": 14080,
+        "C#4": 277, "D#4": 311, "F#4": 370, "G#4": 415, "A#4": 466,
+        "C#5": 554, "D#5": 622, "F#5": 740, "G#5": 831, "A#5": 932,
+        "C#6": 1109, "D#6": 1245, "F#6": 1480, "G#6": 1661, "A#6": 1865,
+        "C#7": 2217, "D#7": 2489, "F#7": 2960, "G#7": 3322, "A#7": 3729,
+        "C#8": 4435, "D#8": 4978, "F#8": 5920, "G#8": 6644, "A#8": 7458,
+        "C#9": 8870, "D#9": 9956, "F#9": 11840, "G#9": 13288
+    };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Device.prototype.whenButtonPressed = function (port) { //currently reads from touch sensor from declared port

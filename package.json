@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "events": "^1.1.1",
+    "noble": "^1.6.0",
+    "serialport": "^4.0.1",
+    "q": "^1.4.1"
+  }
+}
