@@ -39,4 +39,6 @@ v0.8.js: MADE THE FOLLOWING CHANGES:
 
 V1.0.js: everything functional at baselevel. Added: Volume control, separate testing function, getMotorName, added remaining frequencies, clearSensors function
 
-V1.1.js: Next Steps: add waitTillDarkLine, figure out built-in sounds, IR Beacon Mode..?, RGB Mode
+V1.1.js: Added: waitTillDarkLine
+
+    Next Steps: figure out built-in sounds, IR Beacon Mode..?, RGB Mode..?

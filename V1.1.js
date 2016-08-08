@@ -4,7 +4,7 @@
 var SerialPort = require('serialport');
 var q = require('q');
 
-// var DEBUG_NO_EV3 = false; //not used
+var DEBUG_NO_EV3 = false; //not used
 var theEV3DevicePort = theEV3DevicePort || null;
 // var EV3ScratchAlreadyLoaded = EV3ScratchAlreadyLoaded || false; //not used
 var EV3Connected = EV3Connected || false;
@@ -25,7 +25,7 @@ var poller = poller || null;
 var pingTimeout = pingTimeout || null;
 // var connectionTimeout = connectionTimeout || null; //not used
 var waitDuration = waitDuration || 0;
-var driveTimer = 0
+var driveTimer = 0;
 var driveCallback = 0;
 //can directly give callbacks to the command, then the waitingCallbacks[] list will shift it once received a value
 
@@ -34,7 +34,7 @@ var waitingForInitialConnection = waitingForInitialConnection || false;
 
 var Device = (function () {
     function Device() {
-        this.EV3Connected = false;
+        this.DEBUG_NO_EV3 = false;
     };
     
     Device.prototype.tryToConnect = function () {
@@ -103,7 +103,6 @@ var Device = (function () {
             //     "C4": 262, "D4": 294, "E4": 330, "F4": 349, "G4": 392, "A4": 440, "B4": 494,
             //     "C5": 523, "D5": 587, "E5": 659, "F5": 698, "G5": 784, "A5": 880, "B5": 988,
             //     "C6": 1047, "D6": 1175, "E6": 1319, "F6": 1397, "G6": 1568, "A6": 1760, "B6": 1976,
-            //     "C9": 8372, "D9": 9398, "E9": 10548, "F9": 11176, "G9": 12544, "A9": 14080,
             //     "C#4": 277, "D#4": 311, "F#4": 370, "G#4": 415, "A#4": 466,
             //     "C#5": 554, "D#5": 622, "F#5": 740, "G#5": 831, "A#5": 932,
             //     "C#6": 1109, "D#6": 1245, "F#6": 1480, "G#6": 1661, "A#6": 1865
@@ -123,10 +122,10 @@ var Device = (function () {
             // }, 3000);
             // device.startMotors('A', 100);
             // device.startMotors('B', -100);
-            playFreqM2M(831, 1000, 50);
-            setTimeout(function () {
-                playFreqM2M(860, 1000, 50);
-            }, 1000);
+            // playFreqM2M(831, 1000, 50);
+            // setTimeout(function () {
+            //     playFreqM2M(860, 1000, 50);
+            // }, 1000);
             // setTimeout(function () {
             //     motorsStop('coo', 'A');
             //     motorsStop('break', 'B');
@@ -155,13 +154,13 @@ var Device = (function () {
             // device.readColorSensorPort(4, 'color', null);
             // device.readColorSensorPort(1, 'RGBcolor', null);
             // setTimeout(function () {
-            //     device.readDistanceSensorPort(1, null);
-            // }, 3000);
+                
+            // }, 1000);
             // device.waitUntilDarkLine(1, null);
             // setTimeout(function () {
             //     playFreq(392, 100, 100, null);
             // }, tonedelay + 150);
-        }, 3000)
+        }, 3000);
     }
     
     function clearSensors() {
@@ -239,7 +238,6 @@ var Device = (function () {
             clearTimeout(pingTimeout);
         }
         waitingForPing = false;
-        
         if (result < 11 && !warnedAboutBattery) {
             alert('Your battery is getting low.');
             warnedAboutBattery = true;
@@ -275,7 +273,6 @@ var Device = (function () {
         }
         
         var theResult = null;
-        
         var port = thePendingQuery[0];
         var type = thePendingQuery[1];
         var mode = thePendingQuery[2];
@@ -290,7 +287,7 @@ var Device = (function () {
         else if (type == COLOR_SENSOR) {
             console.log('port: ' + port + 1);
             var num = Math.floor(getFloatResult(inputData));
-            console.log(getFloatResult(inputData));
+            console.log(num);
             if (mode == AMBIENT_INTENSITY || mode == REFLECTED_INTENSITY) {
                 theResult = num;
             }
@@ -307,7 +304,7 @@ var Device = (function () {
                 var greenValue = inputData[7];
                 var blueValue = inputData[8];
                 console.log('Red: ' + redValue + ", Green: " + greenValue + ', blue: ' + blueValue);
-                //needs fixing/more understanding
+                //needs fixing and more understanding
             }
         }
         else if (type == IR_SENSOR) {
@@ -422,7 +419,6 @@ var Device = (function () {
             return "09";
         else if (which == "all")
             return "0F";
-            
         return "00";
     }
     
@@ -461,10 +457,13 @@ var Device = (function () {
         var a = new ArrayBuffer(4);
         var c = new Float32Array(a);
         var arr = new Uint8Array(a);
-        arr[0] = inputData[5];
-        arr[1] = inputData[6];
-        arr[2] = inputData[7];
-        arr[3] = inputData[8];
+        console.log(c);
+        console.log(arr);
+        arr[0] = inputData[5];console.log(c);
+        arr[1] = inputData[6];console.log(c);
+        arr[2] = inputData[7];console.log(c);
+        arr[3] = inputData[8];console.log(c);
+        console.log(arr);
         return c[0];
     }
     
@@ -777,11 +776,10 @@ var Device = (function () {
         "C4": 262, "D4": 294, "E4": 330, "F4": 349, "G4": 392, "A4": 440, "B4": 494,
         "C5": 523, "D5": 587, "E5": 659, "F5": 698, "G5": 784, "A5": 880, "B5": 988,
         "C6": 1047, "D6": 1175, "E6": 1319, "F6": 1397, "G6": 1568, "A6": 1760, "B6": 1976,
-        "C9": 8372, "D9": 9398, "E9": 10548, "F9": 11176, "G9": 12544, "A9": 14080,
         "C#4": 277, "D#4": 311, "F#4": 370, "G#4": 415, "A#4": 466,
         "C#5": 554, "D#5": 622, "F#5": 740, "G#5": 831, "A#5": 932,
         "C#6": 1109, "D#6": 1245, "F#6": 1480, "G#6": 1661, "A#6": 1865
-    };
+    }
     
     var colors = ['none', 'black', 'blue', 'green', 'yellow', 'red', 'white', 'brown'];
     var IRbuttonNames = ['Top Left', 'Bottom Left', 'Top Right', 'Bottom Right', 'Top Left & Top Right', 'Top Left & Bottom Right', 'Bottom Left & Top Right', 'Bottom Left & Bottom Right', 'Top Bar', 'Top Left & Bottom Left', 'Top Right & Bottom Right'];
