@@ -36,7 +36,12 @@ EV3.tryToConnect(function (device) {
             ["12. read Color sensor (reflected intensity)"],
             ["13. read from Motor"],
             ["14. wait until Dark line"],
-            ["15. read battery level"]
+            ["15. read battery level"],
+            ["16. read beacon button (CH 1)"]
+            // ["17. "],
+            // ["18. "],
+            // ["19. "],
+            // ["20. "]
         ];
         userInterface(device, listOfCommands);
     }, 2000);
@@ -99,7 +104,7 @@ function userInterface(device, list) {
                 device.readColorSensorPort(3, 'reflected', null);
                 break;
             case "13":
-                //readFromMotor = function (<spins>/"speed", A/B/C/D/A+D/B+C, callback) 
+                //readFromMotor = function (<spins>/"speed", A/B/C/D, callback) 
                 device.readFromMotor("any", "A", null);
                 break;
             case "14":
@@ -107,7 +112,12 @@ function userInterface(device, list) {
                 device.waitUntilDarkLine(3, null);
                 break;
             case "15":
+                //readBatteryLevel = function (callback)
                 device.readBatteryLevel(null);
+                break;
+            case "16":
+                //whenRemoteButtonPressed = function (IRButton, 1/2/3/4)
+                device.whenRemoteButtonPressed(IRButton, 1);
                 break;
             default:
                 console.log("no");
@@ -116,9 +126,6 @@ function userInterface(device, list) {
         userInterface(device, list);
     })
 };
-// function sendCommand(miposaur, queue) {
-    
-// }
     //TONE FUNCTIONS w/ identification arrays
     var frequencies = {
         "C4": 262, "D4": 294, "E4": 330, "F4": 349, "G4": 392, "A4": 440, "B4": 494,
@@ -133,21 +140,24 @@ function userInterface(device, list) {
     var IRbuttonNames = ['Top Left', 'Bottom Left', 'Top Right', 'Bottom Right', 'Top Left & Top Right', 'Top Left & Bottom Right', 'Bottom Left & Top Right', 'Bottom Left & Bottom Right', 'Top Bar', 'Top Left & Bottom Left', 'Top Right & Bottom Right'];
     var IRbuttonCodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     var breakTypes = ["Break", "other"];
-    var readMotorTypes = [""]
-
+    var readMotorTypes = ["forward", "reverse", "left", "right"];
+    
+    // MOTOR FUNCTIONS
     // Device.prototype.startMotors = function (which, speed)
-    // Device.prototype.motorDegrees = function (which, speed, degrees, howStop) 
+    // Device.prototype.motorDegrees = function (which, speed, degrees, howStop)
     // Device.prototype.steeringControl = function (ports, what, speed, duration, callback)
     // Device.prototype.allMotorsOff = function (how)
-    // function playTone(tone, duration, volume, callback) 
+    // SOUND FUNCTIONS
+    // function playTone(tone, duration, volume, callback)
     // function playFreq(freq, duration, volume, callback)
     // function playFreqM2M(freq, duration, volume)
-    // //READ FUNCTIONS
+    // READ FUNCTIONS
     // Device.prototype.whenButtonPressed = function (port)
     // Device.prototype.whenRemoteButtonPressed = function (IRButton, port)
     // Device.prototype.readDistanceSensorPort = function (port, callback)
     // Device.prototype.readRemoteButtonPort = function (port, callback)
     // Device.prototype.readTouchSensorPort = function (port, callback)
-    // Device.prototype.readColorSensorPort = function (port, mode, callback) 
-    // Device.prototype.readFromMotor = function (mmode, which, callback) 
-    // Device.prototype.waitUntilDarkLine = function (port, callback) 
+    // Device.prototype.readColorSensorPort = function (port, mode, callback)
+    // Device.prototype.readFromMotor = function (mmode, which, callback)
+    // Device.prototype.waitUntilDarkLine = function (port, callback)
+    // Device.prototype.readBatteryLevel = function (callback)

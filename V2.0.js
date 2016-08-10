@@ -409,10 +409,10 @@ var Device = (function () {
         var arr = new Uint8Array(a);
         // console.log(c);
         // console.log(arr);
-        arr[0] = inputData[5]; console.log(c);
-        arr[1] = inputData[6]; console.log(c);
-        arr[2] = inputData[7]; console.log(c);
-        arr[3] = inputData[8]; console.log(c);
+        arr[0] = inputData[5];
+        arr[1] = inputData[6];
+        arr[2] = inputData[7];
+        arr[3] = inputData[8];
         // console.log(arr);
         return c[0];
     }
