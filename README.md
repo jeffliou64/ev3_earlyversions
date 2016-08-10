@@ -39,6 +39,10 @@ v0.8.js: MADE THE FOLLOWING CHANGES:
 
 V1.0.js: everything functional at baselevel. Added: Volume control, separate testing function, getMotorName, added remaining frequencies, clearSensors function
 
-V1.1.js: Added: waitTillDarkLine
+V1.1.js: Added: waitTillDarkLine, simplified code a bit.
 
-    Next Steps: figure out built-in sounds, IR Beacon Mode..?, RGB Mode..?
+V2.0.js (& test.js): Moved connection settings to test.js, a separate file that will call the exported module from V2.0; V2.0 modified to connect and run EV3 functions from the test.js program
+
+
+
+Next Steps: figure out built-in sounds, IR Beacon Mode..?, RGB Mode..?
