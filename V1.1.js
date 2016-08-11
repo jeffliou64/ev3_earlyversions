@@ -146,7 +146,7 @@ var Device = (function () {
             // }, 7000);
             
             // device.whenButtonPressed(1);
-            
+            // device.whenRemoteButtonPressed(null, 3);
             // device.readDistanceSensorPort(3, null);
             // device.readTouchSensorPort(1, null);
             

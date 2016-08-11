@@ -26,20 +26,20 @@ var driveCallback = 0;
 var waitingForPing = waitingForPing || false;
 var waitingForInitialConnection = waitingForInitialConnection || false;
 
-// var DeviceError = (function () {
-//     function DeviceError(code, message) {
-//         this.code = code;
-//         this.message = message;
-//     }
-//     DeviceError.prototype.toString = function () {
-//         return "DeviceError(" + this.code + ") message: " + this.message;
-//     };
-//     DeviceError.REQUIRE_PAIRING = 401;
-//     DeviceError.DISCONNECTED_ERROR = 506;
-//     DeviceError.COMMAND_INCORRECT = 505;
-//     DeviceError.TURN_OFF = 507;
-//     return DeviceError;
-// }());
+var DeviceError = (function () {
+    function DeviceError(code, message) {
+        this.code = code;
+        this.message = message;
+    }
+    DeviceError.prototype.toString = function () {
+        return "DeviceError(" + this.code + ") message: " + this.message;
+    };
+    DeviceError.REQUIRE_PAIRING = 401;
+    DeviceError.DISCONNECTED_ERROR = 506;
+    DeviceError.COMMAND_INCORRECT = 505;
+    DeviceError.TURN_OFF = 507;
+    return DeviceError;
+}());
 
 var Device = (function () {
     function Device(theEV3DevicePort) {
@@ -121,37 +121,38 @@ var Device = (function () {
         this.readBatteryLevel(theCallback);
     }
 
-    Device.prototype.setupWatchdog = function () {
-        if (poller)
-            clearInterval(poller);
-        poller = setInterval(this.pingBatteryWatchdog, 10000);
-    }
+    // Device.prototype.setupWatchdog = function () {
+    //     if (poller)
+    //         clearInterval(poller);
+    //     poller = setInterval(this.pingBatteryWatchdog, 10000);
+    // }
 
-    Device.prototype.pingBatteryWatchdog = function () {
-        var device = this;
-        console.log("pingBatteryWatchdog");
-        device.testTheConnection(device.pingBatteryCheckCallback);
-        waitingForPing = true;
-        pingTimeout = setTimeout(device.pingTimeOutCallback, 3000);
-    }
+    // Device.prototype.pingBatteryWatchdog = function () {
+    //     var device = this;
+    //     console.log("pingBatteryWatchdog");
+    //     device.testTheConnection(device.pingBatteryCheckCallback);
+    //     waitingForPing = true;
+    //     pingTimeout = setTimeout(device.pingTimeOutCallback, 3000);
+    // }
 
     Device.disconnect = function () {
         theEV3DevicePort.close(function (error) {
             if (error) {
                 return console.log('error: ' + error.message);
             };
+            throw new DeviceError(DeviceError.TURN_OFF, "something something turn off");
         });
     };
 
-    Device.prototype.pingTimeOutCallback = function () {
-        if (waitingForPing == true) {
-            console.log('ping timed out');
-            if (poller) {
-                clearInterval(poller);
-            }
-            EV3Connected = false;
-        }
-    }
+    // Device.prototype.pingTimeOutCallback = function () {
+    //     if (waitingForPing == true) {
+    //         console.log('ping timed out');
+    //         if (poller) {
+    //             clearInterval(poller);
+    //         }
+    //         EV3Connected = false;
+    //     }
+    // }
 
     Device.prototype.endSequence = function () {
         console.log('we did it!');
@@ -164,7 +165,7 @@ var Device = (function () {
         EV3Connected = true;
         connecting = false;
         var device = this;
-        this.playStartUpTones();
+        //this.playStartUpTones();
 
         if (result < 11 && !warnedAboutBattery) {
             alert('Your Battery is getting low. ');
@@ -195,15 +196,15 @@ var Device = (function () {
         var device = this;
         var tonedelay = 1000;
         setTimeout(function () {
-            device.playFreqM2M(262, 100, 50);
+            device.playFreqM2M(262, 150, 50);
         }, tonedelay);
 
         setTimeout(function () {
-            device.playFreq(392, 100, 50, null);
+            device.playFreq(392, 150, 50, null);
         }, tonedelay + 150);
 
         setTimeout(function () {
-            device.playTone('C5', 100, 50, null);
+            device.playTone('C5', 150, 50, null);
         }, tonedelay + 300);
     }
 
@@ -354,43 +355,43 @@ var Device = (function () {
     var TONE_QUERY = "TONE_QUERY";
 
     // motor port bit field from menu choice string
-    Device.prototype.getMotorBitsHexString = function (which) {
-        if (which == "A")
+    Device.prototype.getMotorBitsHexString = function (ports) {
+        if (ports == "A")
             return "01";
-        else if (which == "B")
+        else if (ports == "B")
             return "02";
-        else if (which == "C")
+        else if (ports == "C")
             return "04";
-        else if (which == "D")
+        else if (ports == "D")
             return "08";
-        else if (which == "B+C")
+        else if (ports == "B+C")
             return "06";
-        else if (which == "A+D")
+        else if (ports == "A+D")
             return "09";
-        else if (which == "all")
+        else if (ports == "all")
             return "0F";
         return "00";
     }
 
-    Device.prototype.getMotorIndex = function (which) {
-        if (which == "A")
+    Device.prototype.getMotorIndex = function (ports) {
+        if (ports == "A")
             return 4;
-        else if (which == "B")
+        else if (ports == "B")
             return 5;
-        else if (which == "C")
+        else if (ports == "C")
             return 6;
-        else if (which == "D")
+        else if (ports == "D")
             return 7;
     }
 
-    Device.prototype.getMotorName = function (which) {
-        if (which == 4)
+    Device.prototype.getMotorName = function (ports) {
+        if (ports == 4)
             return 'A';
-        else if (which == 5)
+        else if (ports == 5)
             return 'B';
-        else if (which == 6)
+        else if (ports == 6)
             return 'C';
-        else if (which == 7)
+        else if (ports == 7)
             return 'D';
     }
 
@@ -407,13 +408,10 @@ var Device = (function () {
         var a = new ArrayBuffer(4);
         var c = new Float32Array(a);
         var arr = new Uint8Array(a);
-        // console.log(c);
-        // console.log(arr);
         arr[0] = inputData[5];
         arr[1] = inputData[6];
         arr[2] = inputData[7];
         arr[3] = inputData[8];
-        // console.log(arr);
         return c[0];
     }
 
@@ -448,7 +446,7 @@ var Device = (function () {
                 return IRbuttonNames[i];
             }
         }
-        return "";
+        return "none";
     }
 
     Device.prototype.createMessage = function (str) {
@@ -543,15 +541,15 @@ var Device = (function () {
             waitingQueries.shift(); //remove it from the queue
             thePendingQuery = query_info;
             console.log('command before packing: ' + theCommand);
-            var packedCommand = this.packMessageForSending(theCommand);
+            var packedCommand = device.packMessageForSending(theCommand);
             console.log('packed command: ' + packedCommand);
-            this.sendCommand(packedCommand);
+            device.sendCommand(packedCommand);
         }
         else if (query_info.length == 4) // a query with no response
         {
             if (thePendingQuery) {    // bail if we're waiting for a response
                 console.log('lol what');
-                this.executeQueryQueueAgain();
+                device.executeQueryQueueAgain();
                 return;
             }
             var type = query_info[0];
@@ -560,13 +558,13 @@ var Device = (function () {
             var theCommand = query_info[3];
 
             if (type == DRIVE_QUERY || type == DRIVE_QUERY_DURATION) {
-                this.clearDriveTimer();
+                device.clearDriveTimer();
                 if (type == DRIVE_QUERY_DURATION) {
                     driveCallback = callback;   // save this callback in case timer is cancelled we can call it directly
                     driveTimer = setTimeout(function () {
                         if (duration > 0) // allow zero duration to run motors asynchronously
                         {
-                            this.motorsStop('break', ports); // xxx
+                            device.motorsStop('break', ports); // xxx
                         }
                         if (callback)
                             callback();
@@ -582,11 +580,11 @@ var Device = (function () {
             waitingQueries.shift(); // remove it from the queue
 
             console.log('command before packing: ' + theCommand);
-            var packedCommand = this.packMessageForSending(theCommand);
+            var packedCommand = device.packMessageForSending(theCommand);
             console.log('packed command: ' + packedCommand);
-            this.sendCommand(packedCommand);
+            device.sendCommand(packedCommand);
 
-            this.executeQueryQueueAgain();   // maybe do the next one
+            device.executeQueryQueueAgain();   // maybe do the next one
         }
     }
 
@@ -609,22 +607,22 @@ var Device = (function () {
     }
 
     //MOTOR FUNCTIONS
-    Device.prototype.startMotors = function (which, speed) {
+    Device.prototype.startMotors = function (ports, speed) {
         this.clearDriveTimer();
-        console.log('motor ' + which + " speed: " + speed);
-        var motorCommand = this.motor(which, speed);
+        console.log('motor ' + ports + " speed: " + speed);
+        var motorCommand = this.motor(ports, speed);
 
         this.addToQueryQueue([DRIVE_QUERY, 0, null, motorCommand]);
         console.log("Added start motor. Queue length now: " + waitingQueries.length);
     }
 
-    Device.prototype.motorDegrees = function (which, speed, degrees, howStop) {
+    Device.prototype.motorDegrees = function (ports, speed, degrees, howStop) {
         speed = this.capSpeed(speed);
         if (degrees < 0) {
             degrees *= -1;
             speed *= -1;
         }
-        var motorBitField = this.getMotorBitsHexString(which);
+        var motorBitField = this.getMotorBitsHexString(ports);
         var speedBits = this.getPackedOutputHexString(speed, 1);
         var stepRampUpBits = this.getPackedOutputHexString(0, 3);
         var stepConstantBits = this.getPackedOutputHexString(degrees, 3);
@@ -659,9 +657,9 @@ var Device = (function () {
         return speed;
     }
 
-    Device.prototype.motor = function (which, speed) {
+    Device.prototype.motor = function (ports, speed) {
         speed = this.capSpeed(speed);
-        var motorBitField = this.getMotorBitsHexString(which);
+        var motorBitField = this.getMotorBitsHexString(ports);
         console.log('got motorBitField: ' + motorBitField);
         var speedBits = this.getPackedOutputHexString(speed, 1);
         console.log('got speedBits: ' + speedBits);
@@ -670,14 +668,13 @@ var Device = (function () {
         return motorsOnCommand;
     }
 
-    Device.prototype.motor2 = function (which, speed) {
+    Device.prototype.motor2 = function (ports, speed) {
         speed = this.capSpeed(speed);
-        var port = which.split("+");
+        var port = ports.split("+");
 
         var motorBitField1 = this.getMotorBitsHexString(port[0]);
         var motorBitField2 = this.getMotorBitsHexString(port[1]);
-        var motorBitField = this.getMotorBitsHexString(which);
-
+        var motorBitField = this.getMotorBitsHexString(ports);
         var speedBits1 = this.getPackedOutputHexString(speed, 1);
         var speedBits2 = this.getPackedOutputHexString(speed * -1, 1);
 
@@ -704,10 +701,10 @@ var Device = (function () {
         this.motorsStop(how, 'all');
     }
 
-    Device.prototype.motorsStop = function (how, which) {
+    Device.prototype.motorsStop = function (how, ports) {
         console.log('motorsStop');
 
-        var motorBitField = this.getMotorBitsHexString(which);
+        var motorBitField = this.getMotorBitsHexString(ports);
         console.log('motorstop motorBitField: ' + motorBitField);
         var howHex = this.getPackedOutputHexString(this.howStopCode(how), 1);
         console.log('motorstop howHex: ' + howHex);
@@ -823,8 +820,8 @@ var Device = (function () {
         this.readFromColorSensor(portInt, modeCode, callback);
     }
 
-    Device.prototype.readFromMotor = function (mmode, which, callback) {
-        var portInt = this.getMotorIndex(which);
+    Device.prototype.readFromMotor = function (mmode, ports, callback) {
+        var portInt = this.getMotorIndex(ports);
         var mode = READ_MOTOR_SPINS;
         if (mmode == 'speed') {
             mode = READ_MOTOR_SPEED;
