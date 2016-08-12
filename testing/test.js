@@ -16,20 +16,6 @@ var poller = 0;         // may not need, could be removed
 var hasCallback = false;
 var theResultArray = [];
 //TONE FUNCTIONS w/ identification arrays
-var frequencies = {
-    "C4": 262, "D4": 294, "E4": 330, "F4": 349, "G4": 392, "A4": 440, "B4": 494,
-    "C5": 523, "D5": 587, "E5": 659, "F5": 698, "G5": 784, "A5": 880, "B5": 988,
-    "C6": 1047, "D6": 1175, "E6": 1319, "F6": 1397, "G6": 1568, "A6": 1760, "B6": 1976,
-    "C#4": 277, "D#4": 311, "F#4": 370, "G#4": 415, "A#4": 466,
-    "C#5": 554, "D#5": 622, "F#5": 740, "G#5": 831, "A#5": 932,
-    "C#6": 1109, "D#6": 1245, "F#6": 1480, "G#6": 1661, "A#6": 1865
-}
-
-var colors = ['none', 'black', 'blue', 'green', 'yellow', 'red', 'white', 'brown'];
-var IRbuttonNames = ['Top Left', 'Bottom Left', 'Top Right', 'Bottom Right', 'Top Left & Top Right', 'Top Left & Bottom Right', 'Bottom Left & Top Right', 'Bottom Left & Bottom Right', 'Top Bar', 'Top Left & Bottom Left', 'Top Right & Bottom Right'];
-var IRbuttonCodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-var breakTypes = ["Break", "other"];
-var readMotorTypes = ["forward", "reverse", "left", "right"];
 
 var rl = readline.createInterface(process.stdin, process.stdout);
 
@@ -161,7 +147,20 @@ function ReceivedResultCallback(device, theResult) {
     theResultArray.push(theResult);
     userInterface(device);
 }
+var frequencies = {
+    "C4": 262, "D4": 294, "E4": 330, "F4": 349, "G4": 392, "A4": 440, "B4": 494,
+    "C5": 523, "D5": 587, "E5": 659, "F5": 698, "G5": 784, "A5": 880, "B5": 988,
+    "C6": 1047, "D6": 1175, "E6": 1319, "F6": 1397, "G6": 1568, "A6": 1760, "B6": 1976,
+    "C#4": 277, "D#4": 311, "F#4": 370, "G#4": 415, "A#4": 466,
+    "C#5": 554, "D#5": 622, "F#5": 740, "G#5": 831, "A#5": 932,
+    "C#6": 1109, "D#6": 1245, "F#6": 1480, "G#6": 1661, "A#6": 1865
+}
 
+var colors = ['none', 'black', 'blue', 'green', 'yellow', 'red', 'white', 'brown'];
+var IRbuttonNames = ['Top Left', 'Bottom Left', 'Top Right', 'Bottom Right', 'Top Left & Top Right', 'Top Left & Bottom Right', 'Bottom Left & Top Right', 'Bottom Left & Bottom Right', 'Top Bar', 'Top Left & Bottom Left', 'Top Right & Bottom Right'];
+var IRbuttonCodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+var breakTypes = ["Break", "other"];
+var readMotorTypes = ["forward", "reverse", "left", "right"];
     // MOTOR FUNCTIONS
     // Device.prototype.startMotors = function (ports, speed)
     // Device.prototype.motorDegrees = function (ports, speed, degrees, howStop)
