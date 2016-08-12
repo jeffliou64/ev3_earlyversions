@@ -13,7 +13,8 @@ var tone = null;        // look at frequency array
 var freq = 0;           // any number
 var volume = 0;         // 0 to 100
 var poller = 0;         // may not need, could be removed
-
+var hasCallback = false;
+var theResultArray = [];
 //TONE FUNCTIONS w/ identification arrays
 var frequencies = {
     "C4": 262, "D4": 294, "E4": 330, "F4": 349, "G4": 392, "A4": 440, "B4": 494,
@@ -34,11 +35,17 @@ var rl = readline.createInterface(process.stdin, process.stdout);
 
 EV3.tryToConnect(function (device) {
     if (poller)
-            clearInterval(poller);
+        clearInterval(poller);
     //poller = setInterval(device.testTheConnection(device.pingBatteryCheckCallback), 10000);
     console.log('CONNECTED WOOOOOOHHOOOOOOOO');
     setTimeout(function () {
-        var listOfCommands = [
+        userInterface(device);
+    }, 2000);
+});
+
+function userInterface(device) {
+    hasCallback = false;
+    var listOfCommands = [
             ["01. playTone"],
             ["02. play Frequency"],
             ["03. play Frequency 2"],
@@ -60,22 +67,21 @@ EV3.tryToConnect(function (device) {
             // ["19. "],
             ["20. disconnect from EV3 (end program)"]
         ];
-        userInterface(device, listOfCommands);
-    }, 2000);
-});
-
-function userInterface(device, list) {
-    list.forEach(function(func, i) {
+    listOfCommands.forEach(function(func, i) {
         console.log("[" + i + "]. " + func[0]);
     });
     rl.question("What command to add: ", function (selectedmode) {
         switch (selectedmode) {
             case "01":
                 //playTone = function(tone, duration (msec), 0-100, callback)
-                device.playTone("C4", 1000, 100, null); break;
+                device.playTone("C4", 2000, 100, ReceivedResultCallback);
+                hasCallback = true;
+                break;
             case "02":
                 //playFreq = function(frequency, duration (msec), 0-100, callback)
-                device.playFreq(523, 1000, 100, null); break;
+                device.playFreq(523, 1000, 100, ReceivedResultCallback);
+                hasCallback = true;
+                break;
             case "03":
                 //playFreqM2M = function(frequency, duration (msec), 0-100)
                 device.playFreqM2M(1047, 1000, 100); break;
@@ -86,47 +92,75 @@ function userInterface(device, list) {
                 //motorDegrees = function (A/B/C/D/A+D/B+C, 0-100, degrees, Break/<any other phrase>) 
                 device.motorDegrees("A", 20, 90, "Break"); break;
             case "06":
-                //steeringControl = function (A/B/C/D/A+D/B+C, forward/reverse/left/right, 0-100, duration (sec), callback)
-                device.steeringControl("A", "forward", 100, 1, null); break;
+                //steeringControl = function (A/B/C/D/A+D/B+C, forward/reverse/left/right, 0-100, duration (msec), callback)
+                device.steeringControl("A", "forward", 100, 1000, ReceivedResultCallback);
+                hasCallback = true;
+                break;
             case "07":
                 //allMotorsOff = function (Break/<any other phrase>)
                 device.allMotorsOff("Break"); break;
             case "08":
                 //readDistanceSensorPort = function (1/2/3/4, callback)
-                device.readDistanceSensorPort(1, null); break;
+                device.readDistanceSensorPort(1, ReceivedResultCallback);
+                hasCallback = true;
+                break;
             case "09":
                 //readTouchSensorPort = function (1/2/3/4, callback)
-                device.readTouchSensorPort(2, null); break;
+                device.readTouchSensorPort(2, ReceivedResultCallback);
+                hasCallback = true;
+                break;
             case "10":
                 //readColorSensorPort = function (1/2/3/4, "color", callback) 
-                device.readColorSensorPort(3, 'color', null); break;
+                device.readColorSensorPort(3, 'color', ReceivedResultCallback);
+                hasCallback = true;
+                break;
             case "11":
                 //readColorSensorPort = function (1/2/3/4, "ambient", callback) 
-                device.readColorSensorPort(3, 'ambient', null); break;
+                device.readColorSensorPort(3, 'ambient', ReceivedResultCallback);
+                hasCallback = true;
+                break;
             case "12":
                 //readColorSensorPort = function (1/2/3/4, "reflected", callback) 
-                device.readColorSensorPort(3, 'reflected', null); break;
+                device.readColorSensorPort(3, 'reflected', ReceivedResultCallback);
+                hasCallback = true;
+                break;
             case "13":
                 //readFromMotor = function (<spins>/"speed", A/B/C/D, callback) 
-                device.readFromMotor("any", "A", null); break;
+                device.readFromMotor("any", "A", ReceivedResultCallback);
+                hasCallback = true;
+                break;
             case "14":
                 //waitUntilDarkLine = function (1/2/3/4, callback) 
-                device.waitUntilDarkLine(3, null); break;
+                device.waitUntilDarkLine(3, ReceivedResultCallback);
+                hasCallback = true;
+                break;
             case "15":
                 //readBatteryLevel = function (callback)
-                device.readBatteryLevel(null); break;
+                device.readBatteryLevel(ReceivedResultCallback);
+                hasCallback = true;
+                break;
             case "16":
-                //whenRemoteButtonPressed = function (IRButton, 1/2/3/4)
-                device.whenRemoteButtonPressed(null, 1); break;
+                //whenRemoteButtonPressed = function (IRButton, 1/2/3/4, callback)
+                device.whenRemoteButtonPressed("null", 1, ReceivedResultCallback);
+                hasCallback = true;
+                break;
             case "20":
                 //endSequence = function ()
                 device.endSequence(); break;
             default:
                 console.log("no"); break;
         }
-        userInterface(device, list);
+        if (hasCallback == false) {
+            userInterface(device);
+        }
     })
 };
+
+function ReceivedResultCallback(device, theResult) {
+    console.log("Result: " + theResult);
+    theResultArray.push(theResult);
+    userInterface(device);
+}
 
     // MOTOR FUNCTIONS
     // Device.prototype.startMotors = function (ports, speed)
