@@ -65,19 +65,20 @@ var Device = (function () {
                 var portToConnect = '/dev/tty.' + serialport.comName.substr(8);
                 theEV3DevicePort = new SerialPort(portToConnect, baudRate = 56700, function (err) {
                     if (err) {
-                        console.log('Error: ', err.message);
-                        Device.disconnect();
-                    }
-                    var device = new Device(theEV3DevicePort);
-                    theEV3DevicePort.on('data', function (result) {
-                        device.receive_handler(result);
-                    })
-                    console.log('CONNECTED TO ' + theEV3DevicePort);
-                    console.log('CONNECTED TO ' + serialport.comName);
-                    EV3Connected = true;
-                    connecting = false;
-                    device.testTheConnection(device.startupBatteryCheckCallback(callerCallback));
-                    waitingForInitialConnection = true;
+                        console.log(err.message);
+                        callerCallback(theEV3DevicePort, err);
+                    } else {
+                        var device = new Device(theEV3DevicePort);
+                        theEV3DevicePort.on('data', function (result) {
+                            device.receive_handler(result);
+                        })
+                        console.log('CONNECTED TO ' + theEV3DevicePort);
+                        console.log('CONNECTED TO ' + serialport.comName);
+                        EV3Connected = true;
+                        connecting = false;
+                        device.testTheConnection(device.startupBatteryCheckCallback(callerCallback));
+                        waitingForInitialConnection = true;
+                    } 
                 });
                 if (!connecting && !EV3Connected) {
                     Device.disconnect();
@@ -121,16 +122,17 @@ var Device = (function () {
     }
 
     Device.disconnect = function () {
+        console.log("disconnecting from EV3")
         theEV3DevicePort.close(function (error) {
             if (error) {
                 return console.log('error: ' + error.message);
             };
+            console.log("port closed");
             throw new DeviceError(DeviceError.TURN_OFF, "something something turn off");
         });
     };
 
     Device.prototype.endSequence = function () {
-        console.log('we did it!');
         Device.disconnect();
     }
 
@@ -151,7 +153,7 @@ var Device = (function () {
                 callerCallback(device);
             }
             else
-                Device.disconnect;
+                Device.disconnect();
         }, 1500);
         if (lastCommandWeWereTrying) {
             waitingQueries.push(lastCommandWeWereTrying);

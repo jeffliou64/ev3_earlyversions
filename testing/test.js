@@ -19,7 +19,11 @@ var theResultArray = [];
 
 var rl = readline.createInterface(process.stdin, process.stdout);
 
-EV3.tryToConnect(function (device) {
+EV3.tryToConnect(function (device, error) {
+    if (error) {
+        console.log("Cannot open port");
+        EV3.endSequence();
+    }
     if (poller)
         clearInterval(poller);
     //poller = setInterval(device.testTheConnection(device.pingBatteryCheckCallback), 10000);
